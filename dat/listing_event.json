@@ -1,0 +1,39 @@
+{
+    "event": "item_listed",
+    "payload": {
+      "event_type": "item_listed",
+      "payload": {
+        "base_price": "999000000000000000",
+        "collection": { "slug": "dogs-of-elon" },
+        "event_timestamp": "2022-07-17T10:12:17.796355+00:00",
+        "expiration_date": "2022-07-18T10:07:02.000000+00:00",
+        "is_private": false,
+        "item": { "chain": { "name": "ethereum" },
+          "metadata": {
+            "animation_url": null,
+            "image_url": "https://lh3.googleusercontent.com/7GQ8HsXWGTi-tWi_2QBZvvYHj5Ao8cvOQOYKH03EdUCXFEzbHLzNJ6MKh-ymjcMg7Qzr5kVfN6M5G9tt5fEwgrObzQ0jO-3YOsp9=s250",
+            "metadata_url": "https://ipfs.io/ipfs/QmcxJeVYRhyevvwQgsBfSWiY7QVmyNx1rQinzXbc1ZYut5/7502",
+            "name": "#7502"
+          },
+          "nft_id": "ethereum/0xd8cdb4b17a741dc7c6a57a650974cd2eba544ff7/7502",
+          "permalink": "https://opensea.io/assets/ethereum/0xd8cdb4b17a741dc7c6a57a650974cd2eba544ff7/7502"
+        },
+        "listing_date": "2022-07-17T10:12:08.000000+00:00",
+        "listing_type": null,
+        "maker": { "address": "0xceccef4807c0dfcbad7c22c853ad386b49f5158a"},
+        "payment_token": {
+          "address": "0x0000000000000000000000000000000000000000",
+          "decimals": 18,
+          "eth_price": "1.000000000000000",
+          "name": "Ether",
+          "symbol": "ETH",
+          "usd_price": "1097.799999999999955000"
+        },
+        "quantity": 1,
+        "taker": null
+      },
+      "sent_at": "2022-07-17T10:12:17.825251+00:00"
+    },
+    "ref": null,
+    "topic": "collection:dogs-of-elon"
+  }

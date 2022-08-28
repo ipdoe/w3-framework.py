@@ -1,0 +1,37 @@
+{
+  "event": "item_received_offer",
+  "payload": {
+    "event_type": "item_received_offer",
+    "payload": {
+      "base_price": "265000000000000000",
+      "collection": { "slug": "womenunite" },
+      "created_date": "2022-07-17T16:41:25.000000+00:00",
+      "event_timestamp": "2022-07-17T16:43:07.745388+00:00",
+      "expiration_date": "2022-07-20T16:42:52.000000+00:00",
+      "item": { "chain": { "name": "ethereum" },
+        "metadata": {
+          "animation_url": null,
+          "image_url": "https://lh3.googleusercontent.com/YX0It7W6UBZD0NTDHgGFew9k7ZMQrX77XPXOsbAGqUDwMMc7vL1OI-NLr5zPFnWSLFJ7XnF4fQbfTzcNiHCWNeI4JEwOW6H6sVF3RYg=s250",
+          "metadata_url": null,
+          "name": "Women Unite Silver Throne Pass"
+        },
+        "nft_id": "ethereum/0x495f947276749ce646f68ac8c248420045cb7b5e/110063331335139009547571421808057778384289125434812320670302640638044521105360",
+        "permalink": "https://opensea.io/assets/ethereum/0x495f947276749ce646f68ac8c248420045cb7b5e/110063331335139009547571421808057778384289125434812320670302640638044521105360"
+      },
+      "maker": { "address": "0xef2779385f53f2a4c33061e97b0f9cc42bb2ab3f" },
+      "payment_token": {
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "decimals": 18,
+        "eth_price": "1.000000000000000",
+        "name": "Wrapped Ether",
+        "symbol": "WETH",
+        "usd_price": "1123.480000000000018000"
+      },
+      "quantity": 1,
+      "taker": null
+    },
+    "sent_at": "2022-07-17T16:43:07.803930+00:00"
+  },
+  "ref": null,
+  "topic": "collection:*"
+}

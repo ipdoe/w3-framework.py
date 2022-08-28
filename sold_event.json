@@ -1,0 +1,42 @@
+{
+  "event": "item_sold",
+  "payload": {
+    "event_type": "item_sold",
+    "payload": {
+      "closing_date": "2022-07-17T13:21:02.000000+00:00",
+      "collection": { "slug": "spider-tanks" },
+      "event_timestamp": "2022-07-17T13:21:02.000000+00:00",
+      "is_private": false,
+      "item": { "chain": { "name": "ethereum" },
+        "metadata": {
+          "animation_url": null,
+          "image_url": "https://lh3.googleusercontent.com/X6ohRp-b0atk0NIEXeyqYhmZ7xPTwMLN7p2wCm8UAAs_2OJ8LBuQvHVO4vN3HMBkQSj7vevQHH5ls0nYboYfjyU_IXhqPUJZBAhx=s250",
+          "metadata_url": "https://tokens.gala.games/gamedia/spider-tank-project/weapon/cannon-common-weapon.json",
+          "name": "Cannon (Common Weapon)"
+        },
+        "nft_id": "ethereum/0xc36cf0cfcb5d905b8b513860db0cfe63f6cf9f5c/146661700142924477752714455803092099137536",
+        "permalink": "https://opensea.io/assets/ethereum/0xc36cf0cfcb5d905b8b513860db0cfe63f6cf9f5c/146661700142924477752714455803092099137536"
+      },
+      "listing_type": null,
+      "maker": { "address": "0xc21ea5ed5a8b5a841588e29f1e47fee97a1b0aeb" },
+      "payment_token": {
+        "address": "0x15d4c048f83bd7e37d49ea4c83a07267ec4203da",
+        "decimals": 8,
+        "eth_price": "0.000050930000000",
+        "name": "Gala",
+        "symbol": "GALA",
+        "usd_price": "0.056797000000000000"
+      },
+      "quantity": 1,
+      "sale_price": "30000100000",
+      "taker": { "address": "0x751c1d29eeb5d1a4230d294a56a15a948e4f75b3" },
+      "transaction": {
+        "hash": "0x3f3f538068b060217648a0385497c2355caf6b5ad2c95918b6fa3bd0078f0e65",
+        "timestamp": "2022-07-17T13:21:02.000000+00:00"
+      }
+    },
+    "sent_at": "2022-07-17T13:21:09.914275+00:00"
+  },
+  "ref": null,
+  "topic": "collection:*"
+}
