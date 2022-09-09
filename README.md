@@ -25,8 +25,9 @@ Change the "Details required from the user" to your own tokens
 
 ## Bot PM2
 ```bash
-pm2 start start_and_log.sh --name doe-buy-bot
-pm2 delete doe-buy-bot
+pm2 install pm2-logrotate
+pm2 start --name doe_nft_os_buy_bot "pipenv run doe_nft_os_buy_bot"
+pm2 delete doe_nft_os_buy_bot
 ```
 
 ## Bot daemon
