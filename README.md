@@ -1,7 +1,7 @@
 # Web3 Python Framework
 
 ## Installation
-```
+```bash
 # clone
 git clone [url]
 cd [proj-name]
