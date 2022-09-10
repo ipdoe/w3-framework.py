@@ -67,13 +67,13 @@ class ItemListed(ItemBase):
 
 class ItemReceivedOffer(ItemListed):
     def __init__(self, _dict: dict, eth_price_usd: float) -> None:
-        ItemBase.__init__(self, _dict, eth_price_usd)
+        ItemListed.__init__(self, _dict, eth_price_usd)
         self.title = 'New Offer'
         self.value_type = 'Offer'
 
 class ItemReceivedBid(ItemListed):
     def __init__(self, _dict: dict, eth_price_usd: float) -> None:
-        ItemBase.__init__(self, _dict, eth_price_usd)
+        ItemListed.__init__(self, _dict, eth_price_usd)
         self.title = 'New Bid'
         self.value_type = 'Bid'
 

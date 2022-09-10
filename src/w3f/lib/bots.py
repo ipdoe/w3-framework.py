@@ -67,7 +67,7 @@ class DscrdChannel:
                 else:
                     await self.chan.send(message)
             except Exception as e:
-                log.log(f'Failed to send embed to discord: {e}')
+                log.log(f'Failed to send embed to discord {self.chan}: {e}')
 
 class DscrdChannels:
     def __init__(self) -> None:

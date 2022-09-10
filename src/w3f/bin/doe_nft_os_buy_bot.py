@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import asyncio, discord, websockets, json
+import asyncio, discord, websockets, json, os
 import telegram as tg
 import w3f.lib.logger as log
+from w3f.lib import whoami
 import w3f.lib.op_events as osea
 import w3f.lib.bots as bots
 import w3f.lib.crypto_oracle as co
@@ -105,10 +106,11 @@ async def on_ready():
     DSCRD_CHANS.init_channels(client)
     TG_CHAN.init(tg_token, tg_main_chan, 'tg_main_chan')
     ETH_PRICE.create_task()
+    await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
     asyncio.create_task(ws_loop())
 
 def main():
-    log.log_version()
+    whoami.log_whoami()
     client.run(DISCORD_TOKEN)
 
 if __name__ == "__main__":
