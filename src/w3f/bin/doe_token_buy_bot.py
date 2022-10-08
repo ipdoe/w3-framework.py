@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from web3 import Web3
-import asyncio,  discord, datetime,  git,  websockets
+import asyncio,  discord, websockets
 import telegram as tg
 import w3f.lib.swap as swap
 import w3f.lib.eth_event_socket as ews

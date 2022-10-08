@@ -1,11 +1,5 @@
 [packages]
 w3f = {editable = true, path = "."}
-websockets = "==10.3"
-GitPython = "*"
-py-cord = "*"
-python-telegram-bot = "*"
-requests = "*"
-web3 = {version = "v6.0.0-beta.1"}
 
 [requires]
 python_version = ">=3.8"
