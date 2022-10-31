@@ -7,7 +7,7 @@ class EthPrice:
 
     def __fetch(self):
         # Fetch price from 2 sources
-        binance = 'https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDC'
+        binance = 'https://api.binance.com/api/v3/ticker/price?symbol=ETHBUSD'
         # messari = 'https://data.messari.io/api/v1/assets/eth/metrics/market-data'
         # coingecko = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
         coinbase = 'https://api.coinbase.com/v2/prices/ETH-USD/spot' # 10k req/h
