@@ -1,4 +1,4 @@
-import datetime, json, git, sys
+import datetime, json, git, sys, os
 
 def func_name(n=0):
     return sys._getframe(n + 1).f_code.co_name
@@ -22,7 +22,7 @@ def log_json(msg):
         _internal_log(msg)
 
 def log_version():
-    _internal_log(f'Version: {git_describe()}')
+    _internal_log(f'{os.path.basename(sys.argv[0])}-{git_describe()}')
 
 def git_describe():
     return git.cmd.Git().describe(tags=True, dirty=True)

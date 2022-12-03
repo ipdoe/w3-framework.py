@@ -7,4 +7,9 @@ def get_main_balance(w3, wallet):
     contract = w3.eth.contract(address=contract_address, abi=doe_token_abi.get_abi())
     balanceOf = contract.functions.balanceOf(wallet).call()
     return Web3.fromWei(balanceOf, 'ether')
-    
+
+def get_arb_balance(w3, wallet):
+    contract_address = "0xE71Db7a96daB25cDb9f4cbC7F686da02192B0E88"
+    contract = w3.eth.contract(address=contract_address, abi=doe_token_abi.get_abi())
+    balanceOf = contract.functions.balanceOf(wallet).call()
+    return Web3.fromWei(balanceOf, 'ether')
