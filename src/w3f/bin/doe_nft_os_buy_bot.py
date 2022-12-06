@@ -79,7 +79,6 @@ async def ws_loop():
                         if type(event) is osea.ItemListed:
                             await DSCRD_CHANS.doe_nft_listing.send(embed)
                         elif type(event) is osea.ItemSold:
-
                             ####  ITME SOLD --> Tell the world!!!!
                             await DSCRD_CHANS.doe_nft_sales.send(embed)
                             TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
