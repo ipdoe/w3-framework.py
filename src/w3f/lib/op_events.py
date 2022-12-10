@@ -1,6 +1,6 @@
 import requests
 
-EVENTS=['item_metadata_updated', 'item_listed', 'item_sold', 'item_transferred', 
+EVENTS=['item_metadata_updated', 'item_listed', 'item_sold', 'item_transferred',
 'item_received_offer', 'item_received_bid', 'item_cancelled']
 
 def short_hex(hex: str, chars=8):
@@ -62,8 +62,11 @@ class ItemBase:
 class ItemListed(ItemBase):
     def __init__(self, _dict: dict, eth_price_usd: float) -> None:
         ItemBase.__init__(self, _dict, eth_price_usd)
-        self.title = 'New Listing'
+        self.title = 'Listing'
         self.value = int(self.payload['payload']['base_price'])
+
+    def announcement(self):
+        return f'📰📰 {self.title} {self.nft_id} 📰📰'
 
 class ItemReceivedOffer(ItemListed):
     def __init__(self, _dict: dict, eth_price_usd: float) -> None:
@@ -77,6 +80,9 @@ class ItemReceivedBid(ItemListed):
         self.title = 'New Bid'
         self.value_type = 'Bid'
 
+    def announcement(self):
+        return f'🔨🔨 {self.title} {self.nft_id} 🔨🔨'
+
 class ItemSold(ItemBase):
     def __init__(self, _dict: dict, eth_price_usd: float) -> None:
         ItemBase.__init__(self, _dict, eth_price_usd)
@@ -87,7 +93,7 @@ class ItemSold(ItemBase):
 
     def tx_url(self):
         return f'[{short_hex(self.transaction)}](https://etherscan.io/tx/{self.transaction})'
-    
+
     def taker_md_link(self):
         return self.os_md_link(f'To: {get_os_username(self.taker)}')
 

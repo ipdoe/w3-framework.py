@@ -9,7 +9,7 @@ class Bots:
     @staticmethod
     def init_none():
         return Bots(None)
-    
+
 class TgChannel:
     def __init__(self) -> None:
         self.bot = None
@@ -77,6 +77,9 @@ class DscrdChannels:
         self.doe_token_buys = DscrdChannel(0)
         self.ipdoe_dbg = DscrdChannel(0)
         self.ipdoe_nft = DscrdChannel(0)
+        self.ipdoe_nft_sales = DscrdChannel(0)
+        self.ipdoe_nft_listings = DscrdChannel(0)
+        self.ipdoe_nft_offers = DscrdChannel(0)
         self.ipdoe_swaps = DscrdChannel(0)
 
     def init_channels(self, client):
@@ -86,4 +89,7 @@ class DscrdChannels:
         self.doe_token_buys.set_channel(client)
         self.ipdoe_dbg.set_channel(client)
         self.ipdoe_nft.set_channel(client)
+        self.ipdoe_nft_sales.set_channel(client)
+        self.ipdoe_nft_listings.set_channel(client)
+        self.ipdoe_nft_offers.set_channel(client)
         self.ipdoe_swaps.set_channel(client)

@@ -19,9 +19,17 @@ DSCRD_CHANS.doe_nft_listing.id = hd.dscrd['doe_nft_listing']
 DSCRD_CHANS.doe_nft_sales.id = hd.dscrd['doe_nft_sales']
 DSCRD_CHANS.doe_nft_floor.id = hd.dscrd['doe_nft_floor']
 DSCRD_CHANS.doe_token_buys.id = hd.dscrd['doe_token_buys']
-DSCRD_CHANS.ipdoe_dbg.id = hd.dscrd['ipdoe_dbg']
-DSCRD_CHANS.ipdoe_nft.id = hd.dscrd['ipdoe_nft']
-DSCRD_CHANS.ipdoe_swaps.id = hd.dscrd['ipdoe_swaps']
+def set_ipdoe_chans():
+    try:
+        global DSCRD_CHANS
+        DSCRD_CHANS.ipdoe_dbg.id = hd.dscrd['ipdoe_dbg']
+        DSCRD_CHANS.ipdoe_nft.id = hd.dscrd['ipdoe_nft']
+        DSCRD_CHANS.ipdoe_nft_sales.id = hd.dscrd['ipdoe_nft_sales']
+        DSCRD_CHANS.ipdoe_nft_listings.id = hd.dscrd['ipdoe_nft_listings']
+        DSCRD_CHANS.ipdoe_nft_offers.id = hd.dscrd['ipdoe_nft_offers']
+        DSCRD_CHANS.ipdoe_swaps.id = hd.dscrd['ipdoe_swaps']
+    except Exception as e:
+        log.log("Failed to setup all ipdoe channels: " + str(e))
 tg_token = hd.TG['token']
 tg_main_chan = hd.TG['main_channel']
 tg_test_chan = hd.TG['test_channel']
@@ -77,13 +85,16 @@ async def ws_loop():
                         embed = to_discord_embed(event)
                         log.log(embed.description)
                         if type(event) is osea.ItemListed:
+                            await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
                             await DSCRD_CHANS.doe_nft_listing.send(embed)
                         elif type(event) is osea.ItemSold:
                             ####  ITME SOLD --> Tell the world!!!!
+                            await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
                             await DSCRD_CHANS.doe_nft_sales.send(embed)
                             TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
                             ####  ITME SOLD --> Tell the world!!!!
-
+                        elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
+                            await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
                         await DSCRD_CHANS.ipdoe_nft.send(embed)
 
                 except asyncio.TimeoutError as te:
@@ -102,6 +113,7 @@ async def ws_loop():
 async def on_ready():
     global DSCRD_CHANS
     global TG_CHAN
+    set_ipdoe_chans()
     DSCRD_CHANS.init_channels(client)
     TG_CHAN.init(tg_token, tg_main_chan, 'tg_main_chan')
     ETH_PRICE.create_task()
