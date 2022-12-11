@@ -3,6 +3,7 @@ import w3f.lib.contracts.staking.doe_doe_abi as doe_doe_abi
 import requests, datetime, json
 
 contract_address = "0x82e12e8B9DFa7c0aaed46554766Af224b1Ccda63"
+starting_block = 13554136
 
 def get_balance(w3, wallet):
     contract = w3.eth.contract(address=contract_address, abi=doe_doe_abi.get_abi())
@@ -14,28 +15,48 @@ def get_balance(w3, wallet):
         "Rewards": earned,
         }
 
-
-def all_doe_stake_transactions(api_key):
+def all_doe_stake_transactions_since(api_key, start_block):
     data = {
         'module': 'account',
         'action': 'txlist',
         'address': contract_address,
-        'startblock':'13554136',
+        'startblock': str(start_block),
         'endblock':'99999999',
         'sort': 'asc',
         'apikey': api_key,
     }
     return requests.get("https://api.etherscan.io/api", data=data).json()['result']
 
-def dump_all_stakers(api_key):
+def all_doe_stake_transactions(api_key):
+    return all_doe_stake_transactions_since(api_key, starting_block)
+
+def dump_all_stakers_since(api_key, start_block):
     addresses = []
-    dump = all_doe_stake_transactions(api_key)
+    dump = all_doe_stake_transactions_since(api_key, start_block)
     for tx in dump:
         addr = Web3.toChecksumAddress(tx['from'])
         if addr not in addresses:
             addresses.append(addr)
 
     return addresses
+
+def dump_all_stakers(api_key):
+    return dump_all_stakers_since(api_key, starting_block)
+
+def get_all_balances(w3, addr_list):
+    holders_lst = []
+    hodlers = {}
+    for addr in addr_list:
+        balance = get_balance(w3, addr)
+        total = float(balance['Staked'] + balance['Rewards'])
+        if (total > 0.0):
+            balance_summary = [addr, total, float(balance['Staked']), float(balance['Rewards'])]
+            holders_lst.append(balance_summary)
+    holders_lst.sort(key=lambda x: x[1], reverse=True)
+
+    for hodler in holders_lst:
+        hodlers[hodler[0]] = {"total": hodler[1], "staked": hodler[2], "rewards": hodler[3]}
+    return hodlers
 
 def get_sorted_balances(w3, addr_list):
     holders_lst = []
