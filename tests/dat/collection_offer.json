@@ -1,0 +1,89 @@
+{
+    "event": "collection_offer",
+    "payload": {
+      "event_type": "collection_offer",
+      "payload": {
+        "asset_contract_criteria": {
+          "address": "0xd8cdb4b17a741dc7c6a57a650974cd2eba544ff7"
+        },
+        "base_price": "10000000000000000",
+        "collection": {
+          "slug": "dogs-of-elon"
+        },
+        "collection_criteria": {
+          "slug": "dogs-of-elon"
+        },
+        "created_date": "2023-01-03T10:12:20.000000+00:00",
+        "event_timestamp": "2023-01-03T10:12:32.591090+00:00",
+        "expiration_date": "2023-01-04T10:12:12.000000+00:00",
+        "item": {},
+        "maker": {
+          "address": "0x5da93cf2d5595dd68daed256dfbff62c7ebbb298"
+        },
+        "order_hash": "0x9216bd94352c9e5270e0f374d386246eee9b7bd0c59e48eb783084a2d6b096ab",
+        "payment_token": {
+          "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+          "decimals": 18,
+          "eth_price": "1.000000000000000",
+          "name": "Wrapped Ether",
+          "symbol": "WETH",
+          "usd_price": "1218.490000000000009000"
+        },
+        "protocol_data": {
+          "parameters": {
+            "conduitKey": "0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000",
+            "consideration": [
+              {
+                "endAmount": "1",
+                "identifierOrCriteria": "39629036955747422357511102309280456758227197424975978936667152718738411371636",
+                "itemType": 4,
+                "recipient": "0x5dA93cF2d5595Dd68Daed256DFbFF62c7ebBB298",
+                "startAmount": "1",
+                "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7"
+              },
+              {
+                "endAmount": "250000000000000",
+                "identifierOrCriteria": "0",
+                "itemType": 1,
+                "recipient": "0x0000a26b00c1F0DF003000390027140000fAa719",
+                "startAmount": "250000000000000",
+                "token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+              },
+              {
+                "endAmount": "200000000000000",
+                "identifierOrCriteria": "0",
+                "itemType": 1,
+                "recipient": "0x0B96041Fc172DfFBA6378E2989bDabcb27D233E8",
+                "startAmount": "200000000000000",
+                "token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+              }
+            ],
+            "counter": 0,
+            "endTime": "1672827132",
+            "offer": [
+              {
+                "endAmount": "10000000000000000",
+                "identifierOrCriteria": "0",
+                "itemType": 1,
+                "startAmount": "10000000000000000",
+                "token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+              }
+            ],
+            "offerer": "0x5da93cf2d5595dd68daed256dfbff62c7ebbb298",
+            "orderType": 2,
+            "salt": "0x360c6ebe000000000000000000000000000000000000000068740a506815d9b6",
+            "startTime": "1672740740",
+            "totalOriginalConsiderationItems": 3,
+            "zone": "0x004C00500000aD104D7DBd00e3ae0A5C00560C00",
+            "zoneHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "signature": "0x69e42840584c21e3cba46ad2248c85d37b395ddf98c6d03396baa27ec5434c683485b3ca7e9439f3b741a4217746c8c07c5fe919543f62650cf180aeac85216c1b"
+        },
+        "quantity": 1,
+        "taker": null
+      },
+      "sent_at": "2023-01-03T10:12:34.658963+00:00"
+    },
+    "ref": null,
+    "topic": "collection:dogs-of-elon"
+}

@@ -27,6 +27,9 @@ def set_ipdoe_chans():
         DSCRD_CHANS.ipdoe_nft_sales.id = hd.dscrd['ipdoe_nft_sales']
         DSCRD_CHANS.ipdoe_nft_listings.id = hd.dscrd['ipdoe_nft_listings']
         DSCRD_CHANS.ipdoe_nft_offers.id = hd.dscrd['ipdoe_nft_offers']
+        # DSCRD_CHANS.ipdoe_nft_sales.id = 0
+        # DSCRD_CHANS.ipdoe_nft_listings.id = 0
+        # DSCRD_CHANS.ipdoe_nft_offers.id = 0
         DSCRD_CHANS.ipdoe_swaps.id = hd.dscrd['ipdoe_swaps']
     except Exception as e:
         log.log("Failed to setup all ipdoe channels: " + str(e))
@@ -51,10 +54,7 @@ def get_rarity(id):
 
 def to_discord_embed(item: osea.ItemBase):
     embed = discord.Embed()
-    embed.description = f'{item.announcement()}\n' \
-        f'Rank: {get_rarity(item.nft_id)}\n' \
-        f'{item.value_type}: {item.value_str()}\n' \
-        f'{item.maker_taker()}'
+    embed.description = item.describe(get_rarity(item.nft_id))
     embed.set_image(url=item.img_url())
     return embed
 
@@ -80,6 +80,7 @@ async def ws_loop():
             while True:
                 try:
                     response = json.loads(await asyncio.wait_for(ws.recv(), timeout=20))
+                    print(json.dumps(response, indent=2))
                     event = osea.create_event(response, ETH_PRICE.get())
                     if isinstance(event, osea.ItemBase):
                         embed = to_discord_embed(event)
@@ -96,6 +97,9 @@ async def ws_loop():
                         elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
                             await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
                         await DSCRD_CHANS.ipdoe_nft.send(embed)
+
+                    log.log(event.base_describe())
+                    await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
 
                 except asyncio.TimeoutError as te:
                     pass

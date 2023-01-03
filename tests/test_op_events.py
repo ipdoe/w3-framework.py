@@ -5,23 +5,23 @@ from w3f.lib import op_events
 from w3f.lib import logger as log
 
 def test__PaymentToken():
-    with open("tests/dat/listing_event.json", 'r') as f:
+    with open("tests/dat/item_listed.json", 'r') as f:
         payload = json.load(f)['payload']['payload']
         payment_token = op_events.PaymentToken(payload['payment_token'])
         assert payment_token.eth_price == 1.0
         assert payment_token.symbol == "ETH"
-        assert payment_token.from_wei(float(payload['base_price'])) == 0.999
-        assert payment_token.to_string(float(payload['base_price'])) == f"{0.999} ETH"
+        assert payment_token.from_wei(float(payload['base_price'])) == 0.0349
+        assert payment_token.to_string(float(payload['base_price'])) == f"{0.0349} ETH"
 
 def test__ItemListed():
-    with open("tests/dat/listing_event.json", 'r') as f:
+    with open("tests/dat/item_listed.json", 'r') as f:
         data = json.load(f)
         eth_price = 1550.55
         item_listed = op_events.ItemListed(data, eth_price)
 
-        assert item_listed.value == 999000000000000000
-        assert item_listed.value_str() == "0.999 ETH ($1,549.00)"
-        assert item_listed.title == "New Listing"
+        assert item_listed.value == 34900000000000000
+        assert item_listed.value_str() == "0.0349 ETH ($54.11)"
+        assert item_listed.title == "Listing"
 
 def test__ItemReceivedOffer():
     with open("tests/dat/offer_event.json", 'r') as f:
@@ -46,7 +46,7 @@ def test__ItemSold():
 
 def test__create_event():
     eth_price = 1550.55
-    with open("tests/dat/listing_event.json", 'r') as f:
+    with open("tests/dat/item_listed.json", 'r') as f:
         event = op_events.create_event(json.load(f), eth_price)
         assert type(event) is op_events.ItemListed
 

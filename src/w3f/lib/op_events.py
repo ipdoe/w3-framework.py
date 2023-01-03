@@ -22,18 +22,36 @@ class PaymentToken:
     def to_string(self, ammount):
         return f'{self.from_wei(ammount)} {self.symbol}'
 
-class ItemBase:
+class EventBase:
     def __init__(self, _dict: dict, eth_price_usd: float) -> None:
         self._dict = _dict
         self.eth_price_usd = eth_price_usd
-        self.title = ''
+        self.event_type = self._dict['event']
+        self.title = self.event_type
         self.payload = self._dict['payload']
-        self.os_link = self.payload['payload']['item']['permalink']
-        self.nft_id = self.payload['payload']['item']['nft_id'].split('/')[-1]
         self.maker = self.payload['payload']['maker']['address']
+        self.timestamp = self.payload['payload']['event_timestamp']
+        self.sent_at = self.payload['sent_at']
         self.token = PaymentToken(self.payload['payload']['payment_token'])
         self.value = 0
         self.value_type = 'Price'
+
+    def announcement(self):
+        return f'{self.title}'
+
+    def base_describe(self):
+        return f'{self.title}\n' \
+            f'timestamp: {self.timestamp}\n' \
+            f'sent_at:   {self.sent_at}'
+
+    def describe(self, rarity):
+        return self.base_describe()
+
+class ItemBase(EventBase):
+    def __init__(self, _dict: dict, eth_price_usd: float) -> None:
+        EventBase.__init__(self, _dict, eth_price_usd)
+        self.os_link = self.payload['payload']['item']['permalink']
+        self.nft_id = self.payload['payload']['item']['nft_id'].split('/')[-1]
 
     def eth_value(self) -> float:
         return float(self.token.from_wei(self.value))
@@ -54,10 +72,16 @@ class ItemBase:
         return self.os_md_link(f'From: {get_os_username(self.maker)}')
 
     def announcement(self):
-        return f'🔥🔥🔥 {self.title} {self.nft_id} 🔥🔥🔥'
+        return f'{self.title} {self.nft_id}'
 
     def img_url(self):
         return f'https://explorer.dogsofelon.io/static/images/nft/{self.nft_id}.png'
+
+    def describe(self, rarity):
+        return f'{self.announcement()}\n' \
+            f'Rank: {rarity}\n' \
+            f'{self.value_type}: {self.value_str()}\n' \
+            f'{self.maker_taker()}'
 
 class ItemListed(ItemBase):
     def __init__(self, _dict: dict, eth_price_usd: float) -> None:
@@ -91,6 +115,9 @@ class ItemSold(ItemBase):
         self.taker = self.payload['payload']['taker']['address']
         self.transaction = self.payload['payload']['transaction']['hash']
 
+    def announcement(self):
+        return f'🔥🔥🔥 {self.title} {self.nft_id} 🔥🔥🔥'
+
     def tx_url(self):
         return f'[{short_hex(self.transaction)}](https://etherscan.io/tx/{self.transaction})'
 
@@ -110,7 +137,7 @@ def create_event(event: dict, eth_price_usd: float):
     elif event['event'] ==  'item_received_bid':
         return ItemReceivedBid(event, eth_price_usd)
     else:
-        return None
+        return EventBase(event, eth_price_usd)
 
 def get_os_username(addr: str):
     try:
