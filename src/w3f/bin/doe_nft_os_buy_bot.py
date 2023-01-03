@@ -2,10 +2,11 @@
 
 import asyncio, discord, websockets, json, os
 import telegram as tg
-import w3f.lib.logger as log
+from w3f.lib import bots
+from w3f.lib import doe_nft_data
 from w3f.lib import whoami
+import w3f.lib.logger as log
 import w3f.lib.op_events as osea
-import w3f.lib.bots as bots
 import w3f.lib.crypto_oracle as co
 import w3f.hidden_details as hd
 
@@ -44,17 +45,11 @@ dbg_channel = None
 ipdoe_nft_chan = None
 COLLECTION_SLUG = 'dogs-of-elon'
 ETH_PRICE = co.EthPrice()
-
-def get_rarity(id):
-    data = json.load(open("dat/doeRarity.json"))
-    for nft in data:
-        if nft['nft_id'] == int(id):
-            return nft['total_score']['rank']
-    return -1
+METADATA = doe_nft_data.Metadata()
 
 def to_discord_embed(item: osea.ItemBase):
     embed = discord.Embed()
-    embed.description = item.describe(get_rarity(item.nft_id))
+    embed.description = item.describe(METADATA.get_rarity(item.nft_id))
     embed.set_image(url=item.img_url())
     return embed
 

@@ -19,3 +19,9 @@ def test__Metadata__get_twin():
     assert metad.get_twin(9969) == 0
     assert metad.get_twin(2999) == 0
     assert metad.get_twin(1342) != 0
+
+def test__get_collection_stats__ok():
+    assert doe_nft_data.get_collection_stats()
+
+def test__get_last_sale_price__ok():
+    assert doe_nft_data.get_last_sale_price(2156)

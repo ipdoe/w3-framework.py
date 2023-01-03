@@ -1,16 +1,20 @@
 from web3 import Web3
-import requests, json, os
+import requests, json, os, pathlib
 
 headers = {'User-Agent': 'Mozilla/5.0'}
+dat_path = pathlib.Path("src/w3f/dat")
+op_sea_url = "https://api.opensea.io/api/v1"
 
 
 class Metadata:
     def __init__(self) -> None:
-        self.rarity = json.load(open("src/w3f/dat/doe_rarity.json"))
-        self.types = json.load(open("src/w3f/dat/doe_types.json"))
+        with open(dat_path / "doe_rarity.json") as rarity:
+            with open(dat_path / "doe_types.json") as types:
+                self.rarity = json.load(rarity)
+                self.types = json.load(types)
 
     def get_rarity(self, id):
-        return self.rarity[id - 1]['rank']
+        return self.rarity[int(id) - 1]['rank']
 
     def get_type(self, id):
         if id > 9997:
@@ -33,8 +37,7 @@ class Metadata:
 
 def get_last_sale_price(id):
     contract = "0xd8cdb4b17a741dc7c6a57a650974cd2eba544ff7"
-    url = "https://api.opensea.io/api/v1/asset"
-    data = requests.get(f"{url}/{contract}/{id}/", headers=headers).json()
+    data = requests.get(f"{op_sea_url}/asset/{contract}/{id}/", headers=headers).json()
 
     last_sale = {}
     try:
@@ -57,7 +60,7 @@ def get_last_sale_price(id):
     return last_sale
 
 def get_collection_stats():
-    url = "https://api.opensea.io/api/v1/collection/dogs-of-elon/stats"
+    url = f"{op_sea_url}/collection/dogs-of-elon/stats"
     data = requests.get(url, headers=headers).json()
     return {
         'thirty_day_average_price' : data['stats']['thirty_day_average_price'],
