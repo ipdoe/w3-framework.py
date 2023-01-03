@@ -29,20 +29,16 @@ class EventBase:
         self.event_type = self._dict['event']
         self.title = self.event_type
         self.payload = self._dict['payload']
-        self.maker = self.payload['payload']['maker']['address']
         self.timestamp = self.payload['payload']['event_timestamp']
         self.sent_at = self.payload['sent_at']
-        self.token = PaymentToken(self.payload['payload']['payment_token'])
-        self.value = 0
-        self.value_type = 'Price'
 
     def announcement(self):
         return f'{self.title}'
 
     def base_describe(self):
         return f'{self.title}\n' \
-            f'timestamp: {self.timestamp}\n' \
-            f'sent_at:   {self.sent_at}'
+            f'timestamp: {self.timestamp}, ' \
+            f'sent_at: {self.sent_at}'
 
     def describe(self, rarity):
         return self.base_describe()
@@ -50,8 +46,13 @@ class EventBase:
 class ItemBase(EventBase):
     def __init__(self, _dict: dict, eth_price_usd: float) -> None:
         EventBase.__init__(self, _dict, eth_price_usd)
+        self.maker = self.payload['payload']['maker']['address']
         self.os_link = self.payload['payload']['item']['permalink']
         self.nft_id = self.payload['payload']['item']['nft_id'].split('/')[-1]
+        self.token = PaymentToken(self.payload['payload']['payment_token'])
+        self.value = 0
+        self.value_type = 'Price'
+
 
     def eth_value(self) -> float:
         return float(self.token.from_wei(self.value))

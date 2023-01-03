@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import asyncio, discord, websockets, json, os
-import telegram as tg
 from w3f.lib import bots
 from w3f.lib import doe_nft_data
 from w3f.lib import whoami
@@ -65,48 +64,38 @@ async def subscribe(ws):
 async def ws_loop():
     ws_url = f'wss://stream.openseabeta.com/socket/websocket?token={hd.op_sea_key}'
     log.log(f'url: {ws_url[:-26]}...')
-    ll_connect = log.LogLatch()
     async for ws in websockets.connect(ws_url):
         try:
-            ll_connect.reset()
             log.log("Connection OK")
             await subscribe(ws)
-
             while True:
-                try:
-                    response = json.loads(await asyncio.wait_for(ws.recv(), timeout=20))
-                    print(json.dumps(response, indent=2))
-                    event = osea.create_event(response, ETH_PRICE.get())
-                    if isinstance(event, osea.ItemBase):
-                        embed = to_discord_embed(event)
-                        log.log(embed.description)
-                        if type(event) is osea.ItemListed:
-                            await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
-                            await DSCRD_CHANS.doe_nft_listing.send(embed)
-                        elif type(event) is osea.ItemSold:
-                            ####  ITME SOLD --> Tell the world!!!!
-                            await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
-                            await DSCRD_CHANS.doe_nft_sales.send(embed)
-                            TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
-                            ####  ITME SOLD --> Tell the world!!!!
-                        elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
-                            await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
-                        await DSCRD_CHANS.ipdoe_nft.send(embed)
+                response = json.loads(await ws.recv())
+                event = osea.create_event(response, ETH_PRICE.get())
+                if isinstance(event, osea.ItemBase):
+                    embed = to_discord_embed(event)
+                    log.log(embed.description)
+                    if type(event) is osea.ItemListed:
+                        await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
+                        await DSCRD_CHANS.doe_nft_listing.send(embed)
+                    elif type(event) is osea.ItemSold:
+                        ####  ITME SOLD --> Tell the world!!!!
+                        await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
+                        await DSCRD_CHANS.doe_nft_sales.send(embed)
+                        TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
+                        ####  ITME SOLD --> Tell the world!!!!
+                    elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
+                        await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
+                    await DSCRD_CHANS.ipdoe_nft.send(embed)
 
-                    log.log(event.base_describe())
-                    await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
-
-                except asyncio.TimeoutError as te:
-                    pass
-                except Exception as e:
-                    log.log(f'Exception: {e}')
-                    await DSCRD_CHANS.ipdoe_dbg.send(f'Exit subscription: {e}')
-                    raise
+                log.log(event.base_describe())
+                await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
 
         except websockets.ConnectionClosed as cc:
-            ll_connect.log(f'ConnectionClosed: {cc}')
+            log.log(f'ConnectionClosed: {cc}')
+            await DSCRD_CHANS.ipdoe_dbg.send(f'ConnectionClosed: {cc}')
         except Exception as e:
-            ll_connect.log(f'Exception: {e}')
+            log.log(f'Exception: {e}')
+            await DSCRD_CHANS.ipdoe_dbg.send(f'Exception: {e}')
 
 @client.event
 async def on_ready():
