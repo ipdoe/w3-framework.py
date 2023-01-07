@@ -81,7 +81,7 @@ async def ws_loop():
                         ####  ITME SOLD --> Tell the world!!!!
                         await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
                         await DSCRD_CHANS.doe_nft_sales.send(embed)
-                        TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
+                        await TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
                         ####  ITME SOLD --> Tell the world!!!!
                     elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
                         await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
@@ -103,7 +103,7 @@ async def on_ready():
     global TG_CHAN
     set_ipdoe_chans()
     DSCRD_CHANS.init_channels(client)
-    TG_CHAN.init(tg_token, tg_main_chan, 'tg_main_chan')
+    await TG_CHAN.init(tg_token, tg_main_chan, 'tg_main_chan')
     ETH_PRICE.create_task()
     await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
     asyncio.create_task(ws_loop())

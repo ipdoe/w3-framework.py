@@ -15,13 +15,13 @@ class TgChannel:
         self.bot = None
         self.chat_id = 0
 
-    def init(self, tg_token: str, chat_id: int, description: str) -> None:
+    async def init(self, tg_token: str, chat_id: int, description: str) -> None:
         self.bot = None
         self.chat_id = 0
         bot = None
         try:
             bot = tg.Bot(token=tg_token)
-            bot.send_message(chat_id=chat_id, text=" ")
+            await bot.send_message(chat_id=chat_id, text=" ")
         except tg.error.TelegramError as e:
             # This is the expected error --> OK
             if e.message == 'Message must be non-empty':
@@ -32,18 +32,18 @@ class TgChannel:
         except Exception as e:
             log.log(f'Failed to initialize tg {description}({chat_id}): {e}. INACTIVE')
 
-    def send_text(self, md_msg: str):
+    async def send_text(self, md_msg: str):
         if self.bot is not None:
             try:
-                self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.ParseMode.MARKDOWN,
+                await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.ParseMode.MARKDOWN,
                 disable_web_page_preview=True, text=md_msg)
             except Exception as e:
                 log.log(f'Failed to send msg to tg({self.chat_id}): {e}')
 
-    def send_with_img(self, md_msg: str):
+    async def send_with_img(self, md_msg: str):
         if self.bot is not None:
             try:
-                self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.ParseMode.MARKDOWN, text=md_msg)
+                await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.ParseMode.MARKDOWN, text=md_msg)
             except Exception as e:
                 log.log(f'Failed to send msg to tg({self.chat_id}): {e}')
 

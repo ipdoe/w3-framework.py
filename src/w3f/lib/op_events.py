@@ -36,8 +36,8 @@ class EventBase:
         return f'{self.title}'
 
     def base_describe(self):
-        return f'{self.title}\n' \
-            f'timestamp: {self.timestamp}, ' \
+        return f'{self.title}: ' \
+            f'TS: {self.timestamp}, ' \
             f'sent_at: {self.sent_at}'
 
     def describe(self, rarity):
