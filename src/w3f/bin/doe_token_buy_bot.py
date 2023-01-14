@@ -20,16 +20,27 @@ DSCRD_CHANS = bots.DscrdChannels()
 import w3f.hidden_details as hd
 infura_key = hd.infura_key
 DISCORD_TOKEN = hd.dscrd['token']
-DSCRD_CHANS.doe_token_buys.id = hd.dscrd['doe_token_buys']
-DSCRD_CHANS.ipdoe_dbg.id = hd.dscrd['ipdoe_dbg']
-DSCRD_CHANS.ipdoe_swaps.id = hd.dscrd['ipdoe_swaps']
+def set_ipdoe_chans():
+    try:
+        global DSCRD_CHANS
+        DSCRD_CHANS.ipdoe_dbg.id = hd.dscrd['ipdoe_dbg']
+        DSCRD_CHANS.ipdoe_nft.id = hd.dscrd['ipdoe_nft']
+        DSCRD_CHANS.ipdoe_nft_sales.id = hd.dscrd['ipdoe_nft_sales']
+        DSCRD_CHANS.ipdoe_nft_listings.id = hd.dscrd['ipdoe_nft_listings']
+        DSCRD_CHANS.ipdoe_nft_offers.id = hd.dscrd['ipdoe_nft_offers']
+        # DSCRD_CHANS.ipdoe_nft_sales.id = 0
+        # DSCRD_CHANS.ipdoe_nft_listings.id = 0
+        # DSCRD_CHANS.ipdoe_nft_offers.id = 0
+        DSCRD_CHANS.ipdoe_swaps.id = hd.dscrd['ipdoe_swaps']
+    except Exception as e:
+        log.log("Failed to setup all ipdoe channels: " + str(e))
 tg_token = hd.TG['token']
 tg_main_chan = hd.TG['main_channel']
 tg_fr_chan = hd.TG['fr_channel']
 ######## Details required from the user
 
-swaps = [usdc_doe.swap, eth_doe.swap]
-# swaps = [usdc_eth.swap, eth_usdt.swap]
+# swaps = [usdc_doe.swap, eth_doe.swap]
+swaps = [usdc_eth.swap, eth_usdt.swap]
 
 intents = discord.Intents.default()
 client = discord.Client()
