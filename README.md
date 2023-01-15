@@ -17,7 +17,7 @@ pipenv sync
 
 # Run Scripts
 pipenv run doe_nft_os_buy_bot
-pipenv run doe_token_buy_bot
+pipenv run kdoe_token_buy_bot
 ```
 
 ## Bot usage

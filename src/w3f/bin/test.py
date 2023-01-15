@@ -8,7 +8,15 @@ import w3f.lib.logger as log
 import w3f.lib.op_events as osea
 import w3f.lib.crypto_oracle as co
 import w3f.hidden_details as hd
+from web3 import Web3
+from ens import ENS
 
+w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
+print(f"Connected to Web3: {w3.isConnected()}")
+ns = ENS.fromWeb3(w3)
+print(ns.name("0x5dA93cF2d5595Dd68Daed256DFbFF62c7ebBB298"))
+
+exit()
 COLLECTION_SLUG = 'dogs-of-elon'
 ETH_PRICE = co.EthPrice()
 METADATA = doe_nft_data.Metadata()

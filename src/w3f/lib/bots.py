@@ -1,6 +1,7 @@
 import discord, asyncio
 import telegram as tg
 import w3f.lib.logger as log
+import w3f.hidden_details as hd
 
 class Bots:
     def __init__(self, tg: tg.Bot) -> None:
@@ -93,3 +94,15 @@ class DscrdChannels:
         self.ipdoe_nft_listings.set_channel(client)
         self.ipdoe_nft_offers.set_channel(client)
         self.ipdoe_swaps.set_channel(client)
+
+    def init_with_hidden_details(self, client):
+        try:
+            self.ipdoe_dbg.id =          hd.dscrd["ipdoe_dbg"]
+            self.ipdoe_nft.id =          hd.dscrd["ipdoe_nft"]
+            self.ipdoe_nft_sales.id =    hd.dscrd["ipdoe_nft_sales"]
+            self.ipdoe_nft_listings.id = hd.dscrd["ipdoe_nft_listings"]
+            self.ipdoe_nft_offers.id =   hd.dscrd["ipdoe_nft_offers"]
+            self.ipdoe_swaps.id =        hd.dscrd["ipdoe_swaps"]
+            self.init_channels(client)
+        except Exception as e:
+            log.log("Failed to setup all ipdoe channels: " + str(e))

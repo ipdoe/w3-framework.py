@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-import asyncio,  discord, websockets
+import asyncio, discord, websockets, os
 import telegram as tg
 import w3f.lib.swap as swap
 import w3f.lib.eth_event_socket as ews
 import w3f.lib.bots as bots
 import w3f.lib.logger as log
 import w3f.lib.crypto_oracle as co
-import w3f.lib.contracts.usdc_doe as usdc_doe
-import w3f.lib.contracts.eth_doe as eth_doe
+from w3f.lib.contracts import kdoe_eth
+from w3f.lib import whoami
+from web3 import Web3
+from ens import ENS
 
 # For testing with other contracts
 # Change the swap[] list with these
@@ -16,31 +18,18 @@ import w3f.lib.contracts.usdc_eth as usdc_eth
 import w3f.lib.contracts.eth_usdt as eth_usdt
 
 DSCRD_CHANS = bots.DscrdChannels()
+NS = None
 ######## Details required from the user
 import w3f.hidden_details as hd
 infura_key = hd.infura_key
 DISCORD_TOKEN = hd.dscrd['token']
-def set_ipdoe_chans():
-    try:
-        global DSCRD_CHANS
-        DSCRD_CHANS.ipdoe_dbg.id = hd.dscrd['ipdoe_dbg']
-        DSCRD_CHANS.ipdoe_nft.id = hd.dscrd['ipdoe_nft']
-        DSCRD_CHANS.ipdoe_nft_sales.id = hd.dscrd['ipdoe_nft_sales']
-        DSCRD_CHANS.ipdoe_nft_listings.id = hd.dscrd['ipdoe_nft_listings']
-        DSCRD_CHANS.ipdoe_nft_offers.id = hd.dscrd['ipdoe_nft_offers']
-        # DSCRD_CHANS.ipdoe_nft_sales.id = 0
-        # DSCRD_CHANS.ipdoe_nft_listings.id = 0
-        # DSCRD_CHANS.ipdoe_nft_offers.id = 0
-        DSCRD_CHANS.ipdoe_swaps.id = hd.dscrd['ipdoe_swaps']
-    except Exception as e:
-        log.log("Failed to setup all ipdoe channels: " + str(e))
 tg_token = hd.TG['token']
 tg_main_chan = hd.TG['main_channel']
 tg_fr_chan = hd.TG['fr_channel']
 ######## Details required from the user
 
-# swaps = [usdc_doe.swap, eth_doe.swap]
-swaps = [usdc_eth.swap, eth_usdt.swap]
+# swaps = [usdc_eth.swap, eth_usdt.swap]
+swaps = [kdoe_eth.swap]
 
 intents = discord.Intents.default()
 client = discord.Client()
@@ -68,38 +57,26 @@ async def on_ready():
     except:
         log.log("TG inactive")
     global DSCRD_CHANS
-    DSCRD_CHANS.init_channels(client)
+    DSCRD_CHANS.init_with_hidden_details(client)
     ETH_PRICE.create_task()
     log.log("ETH_PRICE.create_task()")
     asyncio.create_task(ws_event_loop(swaps[0]))
-    log.log("asyncio.create_task(ws_event_loop(swaps[0]))")
-    asyncio.create_task(ws_event_loop(swaps[1]))
-    log.log("asyncio.create_task(ws_event_loop(swaps[1]))")
+    log.log(f"asyncio.create_task(ws_event_loop({swaps[0].name}))")
+    try:
+        asyncio.create_task(ws_event_loop(swaps[1]))
+        log.log(f"asyncio.create_task(ws_event_loop({swaps[1].name}))")
+    except: pass
+    await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
+    await DSCRD_CHANS.ipdoe_swaps.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
 
 def get_usd_price(swap_data: ews.SwapData, swap: swap.Swap):
-    in_token = swap.tokens[swap_data.in_t.id]
-    if (in_token.tracker == 'eth'):
-        return float(in_token.to_decimal(swap_data.in_t.ammount)) * ETH_PRICE.get()
+    token = swap.tokens[swap_data.in_t.id]
+    if (token.tracker == 'eth'):
+        return float(token.to_decimal(swap_data.in_t.ammount)) * ETH_PRICE.get()
+    token = swap.tokens[swap_data.out_t.id]
+    if (token.tracker == 'eth'):
+        return float(token.to_decimal(swap_data.out_t.ammount)) * ETH_PRICE.get()
     return 0.0
-
-async def handle_event(swap_data: ews.SwapData, swap: swap.Swap):
-    usd = get_usd_price(swap_data, swap)
-    text_msg = f"In: {swap.tokens[swap_data.in_t.id].to_string(swap_data.in_t.ammount)}"
-    if (usd > 0.0):
-        text_msg = text_msg + f' (${usd:,.2f})'
-    text_msg = text_msg + f"\nOut: {swap.tokens[swap_data.out_t.id].to_string(swap_data.out_t.ammount)}\n"
-    text_msg = text_msg + f'Tx: [{swap_data.tx[0:8]}](https://etherscan.io/tx/{swap_data.tx})'
-
-    # Check buy
-    red_green_msg = '🔴🔴🔴🔴🔴🔴\n' + text_msg
-    buy = swap.buy_token == swap_data.out_t.id
-    if buy:
-        red_green_msg = '🟢🟢🟢🟢🟢🟢\n' + text_msg
-        await DSCRD_CHANS.doe_token_buys.send(to_embed(red_green_msg))
-        send_tg_message(hd.TG['test_channel'], red_green_msg)
-
-    log.log(red_green_msg) # Debug message
-    await DSCRD_CHANS.ipdoe_swaps.send(to_embed(red_green_msg))
 
 async def ws_event_loop(swap: swap.Swap):
     ll_connect = log.LogLatch()
@@ -112,9 +89,11 @@ async def ws_event_loop(swap: swap.Swap):
             ll_event = log.LogLatch()
             while True:
                 try:
-                    decoded = await ews.wait_swap(ws)
-                    if decoded is not None:
-                        await handle_event(decoded, swap)
+                    swap_data = await ews.wait_swap(NS, ws)
+                    if swap_data is not None:
+                        text_msg = swap.buy_sell_msg(swap_data, get_usd_price(swap_data, swap))
+                        log.log(text_msg)
+                        await DSCRD_CHANS.ipdoe_swaps.send(to_embed(text_msg))
                         ll_event.reset()
                 except Exception as e:
                     ll_event.log(f'{e}')
@@ -123,12 +102,18 @@ async def ws_event_loop(swap: swap.Swap):
                         raise
             
         except websockets.ConnectionClosed as cc:
-            ll_connect.log(f'ConnectionClosed: {cc}')
+            log.log(f'[token] ConnectionClosed: {cc}')
+            await DSCRD_CHANS.ipdoe_dbg.send(f'[token] ConnectionClosed: {cc}')
         except Exception as e:
-            ll_connect.log(f'Exception: {e}')
+            log.log(f'[token] Exception: {e}')
+            await DSCRD_CHANS.ipdoe_dbg.send(f'[token] Exception: {e}')
 
 def main():
-    log.log_version()
+    global NS
+    whoami.log_whoami()
+    w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
+    print(f"Connected to Web3: {w3.isConnected()}")
+    NS = ENS.fromWeb3(w3)
     client.run(DISCORD_TOKEN)
 
 if __name__ == "__main__":
