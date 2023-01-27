@@ -61,6 +61,7 @@ class DscrdChannel:
             pass
 
     async def send(self, message):
+        log.log(f"Send {self.chan}: {message}")
         if self.chan is not None:
             try:
                 if type(message) is discord.Embed:
@@ -69,6 +70,8 @@ class DscrdChannel:
                     await self.chan.send(message)
             except Exception as e:
                 log.log(f'Failed to send embed to discord {self.chan}: {e}')
+                return False
+        return True
 
 class DscrdChannels:
     def __init__(self) -> None:
@@ -103,6 +106,7 @@ class DscrdChannels:
             self.ipdoe_nft_listings.id = hd.dscrd["ipdoe_nft_listings"]
             self.ipdoe_nft_offers.id =   hd.dscrd["ipdoe_nft_offers"]
             self.ipdoe_swaps.id =        hd.dscrd["ipdoe_swaps"]
+            
             self.init_channels(client)
         except Exception as e:
             log.log("Failed to setup all ipdoe channels: " + str(e))

@@ -76,7 +76,9 @@ class ItemBase(EventBase):
         return f'{self.title} {self.nft_id}'
 
     def img_url(self):
-        return f'https://explorer.dogsofelon.io/static/images/nft/{self.nft_id}.png'
+        # return f'https://explorer.dogsofelon.io/static/images/nft/{self.nft_id}.png'
+        api = "a28d5dc2279a0f535adcae2aad0c3bdb"
+        return f"https://api.dogsofelon.io/ipfs/{api}/images/{self.nft_id}.png"
 
     def describe(self, rarity):
         return f'{self.announcement()}\n' \

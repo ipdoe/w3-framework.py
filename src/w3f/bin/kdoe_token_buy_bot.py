@@ -18,7 +18,7 @@ import w3f.lib.contracts.usdc_eth as usdc_eth
 import w3f.lib.contracts.eth_usdt as eth_usdt
 
 DSCRD_CHANS = bots.DscrdChannels()
-NS = None
+name_service = None
 ######## Details required from the user
 import w3f.hidden_details as hd
 infura_key = hd.infura_key
@@ -32,7 +32,9 @@ tg_fr_chan = hd.TG['fr_channel']
 swaps = [kdoe_eth.swap]
 
 intents = discord.Intents.default()
-client = discord.Client()
+class DiscordClient(discord.Client):
+    ready_called = False
+client =DiscordClient()
 bots_ = bots.Bots.init_none()
 ETH_PRICE = co.EthPrice()
 
@@ -56,16 +58,15 @@ async def on_ready():
         bots_.tg = tg.Bot(token=tg_token)
     except:
         log.log("TG inactive")
-    global DSCRD_CHANS
     DSCRD_CHANS.init_with_hidden_details(client)
-    ETH_PRICE.create_task()
-    log.log("ETH_PRICE.create_task()")
-    asyncio.create_task(ws_event_loop(swaps[0]))
-    log.log(f"asyncio.create_task(ws_event_loop({swaps[0].name}))")
-    try:
-        asyncio.create_task(ws_event_loop(swaps[1]))
-        log.log(f"asyncio.create_task(ws_event_loop({swaps[1].name}))")
-    except: pass
+    if not client.ready_called:
+        client.ready_called = True
+        ETH_PRICE.create_task()
+        log.log("ETH_PRICE.create_task()")
+        asyncio.create_task(ws_event_loop(swaps[0]))
+        try:
+            asyncio.create_task(ws_event_loop(swaps[1]))
+        except: pass
     await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
     await DSCRD_CHANS.ipdoe_swaps.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
 
@@ -79,17 +80,16 @@ def get_usd_price(swap_data: ews.SwapData, swap: swap.Swap):
     return 0.0
 
 async def ws_event_loop(swap: swap.Swap):
-    ll_connect = log.LogLatch()
+    log.log(f"asyncio.create_task(ws_event_loop({swap.name}))")
     async for ws in websockets.connect(hd.eth_mainnet_ws):
         try:
-            ll_connect.reset()
             subscription = await ews.subscribe_swap(ws, swap.address)
             log.log(f'Socket subscription {swap.name} [{infura_key[0:5]}...]: {subscription}')
             await DSCRD_CHANS.ipdoe_dbg.send(log.slog(f'Entered swap {swap.name}'))
             ll_event = log.LogLatch()
             while True:
                 try:
-                    swap_data = await ews.wait_swap(NS, ws)
+                    swap_data = await ews.wait_swap(name_service, ws)
                     if swap_data is not None:
                         text_msg = swap.buy_sell_msg(swap_data, get_usd_price(swap_data, swap))
                         log.log(text_msg)
@@ -109,11 +109,11 @@ async def ws_event_loop(swap: swap.Swap):
             await DSCRD_CHANS.ipdoe_dbg.send(f'[token] Exception: {e}')
 
 def main():
-    global NS
+    global name_service
     whoami.log_whoami()
     w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
     print(f"Connected to Web3: {w3.isConnected()}")
-    NS = ENS.fromWeb3(w3)
+    name_service = ENS.fromWeb3(w3)
     client.run(DISCORD_TOKEN)
 
 if __name__ == "__main__":

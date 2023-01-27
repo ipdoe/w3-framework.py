@@ -15,30 +15,14 @@ TG_CHAN = bots.TgChannel()
 ######## Details required from the user
 import w3f.hidden_details as hd
 DISCORD_TOKEN = hd.dscrd['token']
-DSCRD_CHANS.doe_nft_listing.id = hd.dscrd['doe_nft_listing']
-DSCRD_CHANS.doe_nft_sales.id = hd.dscrd['doe_nft_sales']
-DSCRD_CHANS.doe_nft_floor.id = hd.dscrd['doe_nft_floor']
-DSCRD_CHANS.doe_token_buys.id = hd.dscrd['doe_token_buys']
-def set_ipdoe_chans():
-    try:
-        global DSCRD_CHANS
-        DSCRD_CHANS.ipdoe_dbg.id = hd.dscrd['ipdoe_dbg']
-        DSCRD_CHANS.ipdoe_nft.id = hd.dscrd['ipdoe_nft']
-        DSCRD_CHANS.ipdoe_nft_sales.id = hd.dscrd['ipdoe_nft_sales']
-        DSCRD_CHANS.ipdoe_nft_listings.id = hd.dscrd['ipdoe_nft_listings']
-        DSCRD_CHANS.ipdoe_nft_offers.id = hd.dscrd['ipdoe_nft_offers']
-        # DSCRD_CHANS.ipdoe_nft_sales.id = 0
-        # DSCRD_CHANS.ipdoe_nft_listings.id = 0
-        # DSCRD_CHANS.ipdoe_nft_offers.id = 0
-        DSCRD_CHANS.ipdoe_swaps.id = hd.dscrd['ipdoe_swaps']
-    except Exception as e:
-        log.log("Failed to setup all ipdoe channels: " + str(e))
 tg_token = hd.TG['token']
 tg_main_chan = hd.TG['main_channel']
 tg_test_chan = hd.TG['test_channel']
 ######## Details required from the user
 
-client = discord.Client()
+class DiscordClient(discord.Client):
+    ready_called = False
+client = DiscordClient()
 doe_channel = None
 dbg_channel = None
 ipdoe_nft_chan = None
@@ -61,7 +45,41 @@ async def subscribe(ws):
     log.log(msg)
     await DSCRD_CHANS.ipdoe_dbg.send(msg)
 
+async def send_event(event):
+    sent = False
+    while not sent:
+        try:
+            if isinstance(event, osea.ItemBase):
+                embed = to_discord_embed(event)
+                log.log(embed.description)
+                if type(event) is osea.ItemListed:
+                    sent = await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
+                    await DSCRD_CHANS.doe_nft_listing.send(embed)
+                elif type(event) is osea.ItemSold:
+                    ####  ITME SOLD --> Tell the world!!!!
+                    sent = await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
+                    await DSCRD_CHANS.doe_nft_sales.send(embed)
+                    await TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
+                    ####  ITME SOLD --> Tell the world!!!!
+                elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
+                    sent = await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
+                await DSCRD_CHANS.ipdoe_nft.send(embed)
+
+            log.log(event.base_describe())
+            sent |= await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
+        except Exception as e:
+            log.log(f'Exception: {e}')
+
+async def dequeu_loop(nft_event_q: asyncio.Queue):
+    log.log("Dequeuing")
+    while True:
+        event = await nft_event_q.get()
+        await send_event(event)
+
 async def ws_loop():
+    log.log("Websocket loop running")
+    nft_event_q = asyncio.Queue()
+    asyncio.create_task(dequeu_loop(nft_event_q))
     ws_url = f'wss://stream.openseabeta.com/socket/websocket?token={hd.op_sea_key}'
     log.log(f'url: {ws_url[:-26]}...')
     async for ws in websockets.connect(ws_url):
@@ -69,26 +87,8 @@ async def ws_loop():
             log.log("Connection OK")
             await subscribe(ws)
             while True:
-                response = json.loads(await ws.recv())
-                event = osea.create_event(response, ETH_PRICE.get())
-                if isinstance(event, osea.ItemBase):
-                    embed = to_discord_embed(event)
-                    log.log(embed.description)
-                    if type(event) is osea.ItemListed:
-                        await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
-                        await DSCRD_CHANS.doe_nft_listing.send(embed)
-                    elif type(event) is osea.ItemSold:
-                        ####  ITME SOLD --> Tell the world!!!!
-                        await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
-                        await DSCRD_CHANS.doe_nft_sales.send(embed)
-                        await TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
-                        ####  ITME SOLD --> Tell the world!!!!
-                    elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
-                        await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
-                    await DSCRD_CHANS.ipdoe_nft.send(embed)
-
-                log.log(event.base_describe())
-                await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
+                os_event = osea.create_event(json.loads(await ws.recv()), ETH_PRICE.get())
+                nft_event_q.put_nowait(os_event)
 
         except websockets.ConnectionClosed as cc:
             log.log(f'ConnectionClosed: {cc}')
@@ -99,14 +99,16 @@ async def ws_loop():
 
 @client.event
 async def on_ready():
-    global DSCRD_CHANS
-    global TG_CHAN
-    set_ipdoe_chans()
-    DSCRD_CHANS.init_channels(client)
+    log.log("Discord ready")
+    DSCRD_CHANS.init_with_hidden_details(client)
     await TG_CHAN.init(tg_token, tg_main_chan, 'tg_main_chan')
-    ETH_PRICE.create_task()
+    log.log("Channels initialized")
+    if not client.ready_called:
+        client.ready_called = True
+        ETH_PRICE.create_task()
+        asyncio.create_task(ws_loop())
+
     await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
-    asyncio.create_task(ws_loop())
 
 def main():
     whoami.log_whoami()
