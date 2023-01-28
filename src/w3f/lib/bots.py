@@ -61,7 +61,6 @@ class DscrdChannel:
             pass
 
     async def send(self, message):
-        log.log(f"Send {self.chan}: {message}")
         if self.chan is not None:
             try:
                 if type(message) is discord.Embed:
