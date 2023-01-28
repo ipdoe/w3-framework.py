@@ -17,25 +17,20 @@ from ens import ENS
 import w3f.lib.contracts.usdc_eth as usdc_eth
 import w3f.lib.contracts.eth_usdt as eth_usdt
 
-DSCRD_CHANS = bots.DscrdChannels()
-name_service = None
 ######## Details required from the user
 import w3f.hidden_details as hd
-infura_key = hd.infura_key
+INFURA_KEY = hd.infura_key
 DISCORD_TOKEN = hd.dscrd['token']
-tg_token = hd.TG['token']
-tg_main_chan = hd.TG['main_channel']
-tg_fr_chan = hd.TG['fr_channel']
+TG_TOKEN = hd.TG['token']
+TG_MAIN_CHAN = hd.TG['main_channel']
 ######## Details required from the user
 
 # swaps = [usdc_eth.swap, eth_usdt.swap]
-swaps = [kdoe_eth.swap]
+SWAPS = [kdoe_eth.swap]
 
-intents = discord.Intents.default()
-class DiscordClient(discord.Client):
-    ready_called = False
-client =DiscordClient()
-bots_ = bots.Bots.init_none()
+DSCRD_CHANS = bots.DscrdChannels()
+CLIENT = bots.DscrdClient()
+BOTS_ = bots.Bots.init_none()
 ETH_PRICE = co.EthPrice()
 
 def to_embed(message):
@@ -44,28 +39,28 @@ def to_embed(message):
     return embed
 
 def send_tg_message(chat_id, message):
-    if bots_.tg is not None:
+    if BOTS_.tg is not None:
         try:
-            bots_.tg.send_message(chat_id=chat_id, parse_mode=tg.ParseMode.MARKDOWN,
+            BOTS_.tg.send_message(chat_id=chat_id, parse_mode=tg.ParseMode.MARKDOWN,
                 disable_web_page_preview=True, text=message)
         except Exception as e:
             log.log("Failed to send message to TG\n" + str(e))
 
-@client.event
+@CLIENT.event
 async def on_ready():
-    log.log(f'We have logged in as {client.user}')
+    log.log(f'We have logged in as {CLIENT.user}')
     try:
-        bots_.tg = tg.Bot(token=tg_token)
+        BOTS_.tg = tg.Bot(token=TG_TOKEN)
     except:
         log.log("TG inactive")
-    DSCRD_CHANS.init_with_hidden_details(client)
-    if not client.ready_called:
-        client.ready_called = True
+    DSCRD_CHANS.init_with_hidden_details(CLIENT)
+    if not CLIENT.ready_called:
+        CLIENT.ready_called = True
         ETH_PRICE.create_task()
         log.log("ETH_PRICE.create_task()")
-        asyncio.create_task(ws_event_loop(swaps[0]))
+        asyncio.create_task(ws_event_loop(SWAPS[0]))
         try:
-            asyncio.create_task(ws_event_loop(swaps[1]))
+            asyncio.create_task(ws_event_loop(SWAPS[1]))
         except: pass
     await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
     await DSCRD_CHANS.ipdoe_swaps.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
@@ -81,10 +76,13 @@ def get_usd_price(swap_data: ews.SwapData, swap: swap.Swap):
 
 async def ws_event_loop(swap: swap.Swap):
     log.log(f"asyncio.create_task(ws_event_loop({swap.name}))")
+    w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
+    print(f"Connected to Web3: {w3.isConnected()}")
+    name_service = ENS.fromWeb3(w3)
     async for ws in websockets.connect(hd.eth_mainnet_ws):
         try:
             subscription = await ews.subscribe_swap(ws, swap.address)
-            log.log(f'Socket subscription {swap.name} [{infura_key[0:5]}...]: {subscription}')
+            log.log(f'Socket subscription {swap.name} [{INFURA_KEY[0:5]}...]: {subscription}')
             await DSCRD_CHANS.ipdoe_dbg.send(log.slog(f'Entered swap {swap.name}'))
             ll_event = log.LogLatch()
             while True:
@@ -109,12 +107,8 @@ async def ws_event_loop(swap: swap.Swap):
             await DSCRD_CHANS.ipdoe_dbg.send(f'[token] Exception: {e}')
 
 def main():
-    global name_service
     whoami.log_whoami()
-    w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
-    print(f"Connected to Web3: {w3.isConnected()}")
-    name_service = ENS.fromWeb3(w3)
-    client.run(DISCORD_TOKEN)
+    CLIENT.run(DISCORD_TOKEN)
 
 if __name__ == "__main__":
     main()

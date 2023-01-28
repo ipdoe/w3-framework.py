@@ -1,7 +1,10 @@
-import discord, asyncio
+import discord
 import telegram as tg
 import w3f.lib.logger as log
 import w3f.hidden_details as hd
+
+class DscrdClient(discord.Client):
+    ready_called = False
 
 class Bots:
     def __init__(self, tg: tg.Bot) -> None:

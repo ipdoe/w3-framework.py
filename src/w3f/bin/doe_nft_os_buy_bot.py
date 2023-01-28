@@ -9,23 +9,17 @@ import w3f.lib.op_events as osea
 import w3f.lib.crypto_oracle as co
 import w3f.hidden_details as hd
 
-DSCRD_CHANS = bots.DscrdChannels()
-TG_CHAN = bots.TgChannel()
-
 ######## Details required from the user
 import w3f.hidden_details as hd
 DISCORD_TOKEN = hd.dscrd['token']
-tg_token = hd.TG['token']
-tg_main_chan = hd.TG['main_channel']
-tg_test_chan = hd.TG['test_channel']
+TG_TOKEN = hd.TG['token']
+TG_MAIN_CHAN = hd.TG['main_channel']
+TG_TEST_CHAN = hd.TG['test_channel']
 ######## Details required from the user
 
-class DiscordClient(discord.Client):
-    ready_called = False
-client = DiscordClient()
-doe_channel = None
-dbg_channel = None
-ipdoe_nft_chan = None
+DSCRD_CHANS = bots.DscrdChannels()
+TG_CHAN = bots.TgChannel()
+CLIENT = bots.DscrdClient()
 COLLECTION_SLUG = 'dogs-of-elon'
 ETH_PRICE = co.EthPrice()
 METADATA = doe_nft_data.Metadata()
@@ -46,27 +40,27 @@ async def subscribe(ws):
     await DSCRD_CHANS.ipdoe_dbg.send(msg)
 
 async def send_event(event):
-    sent = False
-    while not sent:
+    msg_sent = False
+    while not msg_sent:
         try:
             if isinstance(event, osea.ItemBase):
                 embed = to_discord_embed(event)
                 log.log(embed.description)
                 if type(event) is osea.ItemListed:
-                    sent = await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
+                    msg_sent = await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
                     await DSCRD_CHANS.doe_nft_listing.send(embed)
                 elif type(event) is osea.ItemSold:
                     ####  ITME SOLD --> Tell the world!!!!
-                    sent = await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
+                    msg_sent = await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
                     await DSCRD_CHANS.doe_nft_sales.send(embed)
                     await TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
                     ####  ITME SOLD --> Tell the world!!!!
                 elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
-                    sent = await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
+                    msg_sent = await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
                 await DSCRD_CHANS.ipdoe_nft.send(embed)
 
             log.log(event.base_describe())
-            sent |= await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
+            msg_sent |= await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
         except Exception as e:
             log.log(f'Exception: {e}')
 
@@ -89,7 +83,6 @@ async def ws_loop():
             while True:
                 os_event = osea.create_event(json.loads(await ws.recv()), ETH_PRICE.get())
                 nft_event_q.put_nowait(os_event)
-
         except websockets.ConnectionClosed as cc:
             log.log(f'ConnectionClosed: {cc}')
             await DSCRD_CHANS.ipdoe_dbg.send(f'ConnectionClosed: {cc}')
@@ -97,14 +90,14 @@ async def ws_loop():
             log.log(f'Exception: {e}')
             await DSCRD_CHANS.ipdoe_dbg.send(f'Exception: {e}')
 
-@client.event
+@CLIENT.event
 async def on_ready():
     log.log("Discord ready")
-    DSCRD_CHANS.init_with_hidden_details(client)
-    await TG_CHAN.init(tg_token, tg_main_chan, 'tg_main_chan')
+    DSCRD_CHANS.init_with_hidden_details(CLIENT)
+    await TG_CHAN.init(TG_TOKEN, TG_MAIN_CHAN, 'tg_main_chan')
     log.log("Channels initialized")
-    if not client.ready_called:
-        client.ready_called = True
+    if not CLIENT.ready_called:
+        CLIENT.ready_called = True
         ETH_PRICE.create_task()
         asyncio.create_task(ws_loop())
 
@@ -112,7 +105,7 @@ async def on_ready():
 
 def main():
     whoami.log_whoami()
-    client.run(DISCORD_TOKEN)
+    CLIENT.run(DISCORD_TOKEN)
 
 if __name__ == "__main__":
     main()
