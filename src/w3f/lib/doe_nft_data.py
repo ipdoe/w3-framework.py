@@ -1,15 +1,28 @@
 from web3 import Web3
 import requests, json, os, pathlib
+from collections import namedtuple
+from typing import List
 
-headers = {'User-Agent': 'Mozilla/5.0'}
-dat_path = pathlib.Path("src/w3f/dat")
-op_sea_url = "https://api.opensea.io/api/v1"
+_HEADERS = {'User-Agent': 'Mozilla/5.0'}
+_DAT_PATH = pathlib.Path("src/w3f/dat")
+OP_SEA_URL = "https://api.opensea.io/api/v1"
 
+
+CollectionStats = namedtuple("CollectionStats", ["thirty_day_average_price", "floor_price"])
+PriceStats = namedtuple("PriceStats", ["averaged_floor", "last_sale", "rarity", "estimated", "type"])
+
+class PriceStats(namedtuple("PriceStats", ["averaged_floor", "last_sale", "rarity", "estimated", "type"])):
+    def __new__(self, p1, p2, p3, p4, p5):
+        return super().__new__(self,  p1, p2, p3, p4, p5)
+
+    def to_str(self):
+        type_str = "t-less" if self.type == "traitless" else self.type
+        return f"[{self.rarity: >4}] {type_str: >6}: {self.estimated: 8,.4f} ETH"
 
 class Metadata:
     def __init__(self) -> None:
-        with open(dat_path / "doe_rarity.json") as rarity:
-            with open(dat_path / "doe_types.json") as types:
+        with open(_DAT_PATH / "doe_rarity.json") as rarity:
+            with open(_DAT_PATH / "doe_types.json") as types:
                 self.rarity = json.load(rarity)
                 self.types = json.load(types)
 
@@ -35,39 +48,61 @@ class Metadata:
         except:
             return 0
 
-def get_last_sale_price(id):
+def get_estimated_price(id, metadata: Metadata, stats: CollectionStats, last_sale):
+    type = metadata.get_type(id)
+    averaged_floor = (stats.thirty_day_average_price + stats.floor_price) / 2
+    rarity = metadata.get_rarity(id)
+    rarity_bonus = get_rarity_bonus(rarity)
+    type_floor = get_type_floor(averaged_floor, type)
+
+    return PriceStats(
+        averaged_floor,
+        last_sale,
+        rarity,
+        max(type_floor, averaged_floor * rarity_bonus, last_sale),
+        type
+    )
+
+
+def get_last_sale_prices(ids: List):
     contract = "0xd8cdb4b17a741dc7c6a57a650974cd2eba544ff7"
-    data = requests.get(f"{op_sea_url}/asset/{contract}/{id}/", headers=headers).json()
+    max_chunk = 20
 
-    last_sale = {}
-    try:
-        last_sale['token'] = data['last_sale']['payment_token']['symbol']
-        last_sale['price'] = float(Web3.fromWei(int(data['last_sale']['total_price']), 'ether'))
-        payment_tokens = data['collection']['payment_tokens']
-        for token in payment_tokens:
-            if token['symbol'] == last_sale['token']:
-                last_sale['USD_now'] = token['usd_price'] * last_sale['price']
-                last_sale['ETH_now'] = token['eth_price'] * last_sale['price']
+    last_sales = {}
+    for i in range(0, len(ids), max_chunk):
+        query_param = {
+            "token_ids": ids[i:i + max_chunk],
+            "asset_contract_address": contract,
+        }
 
-        last_sale['USD_then'] = float(data['last_sale']['payment_token']['usd_price']) * last_sale['price']
-    except:
-        last_sale['token'] = ""
-        last_sale['price'] = 0.0
-        last_sale['USD_now'] = 0.0
-        last_sale['ETH_now'] = 0.0
-        last_sale['USD_then'] = 0.0
+        data = requests.get(f"{OP_SEA_URL}/assets", headers=_HEADERS, params=query_param).json()
+        for asset in data["assets"]:
+            id = int(asset["token_id"])
+            last_sale = {}
+            try:
+                last_sale['token'] = asset['last_sale']['payment_token']['symbol']
+                last_sale['price'] = float(Web3.fromWei(int(asset['last_sale']['total_price']), 'ether'))
+                last_sale['eth_now'] = last_sale['price'] * float(asset['last_sale']['payment_token']['eth_price'])
+                last_sale['usd_now'] = last_sale['price'] * float(asset['last_sale']['payment_token']['usd_price'])
+            except:
+                last_sale['token'] = ""
+                last_sale['price'] = 0.0
+                last_sale['eth_now'] = 0.0
+                last_sale['usd_now'] = 0.0
+            last_sales[id] = last_sale
 
-    return last_sale
+    return last_sales
 
 def get_collection_stats():
-    url = f"{op_sea_url}/collection/dogs-of-elon/stats"
-    data = requests.get(url, headers=headers).json()
-    return {
-        'thirty_day_average_price' : data['stats']['thirty_day_average_price'],
-        'floor_price' : data['stats']['floor_price'],
-    }
+    url = f"{OP_SEA_URL}/collection/dogs-of-elon/stats"
+    data = requests.get(url, headers=_HEADERS).json()
+    return CollectionStats(data['stats']['thirty_day_average_price'], data['stats']['floor_price'])
 
 def get_rarity_bonus(rank):
+    if rank < 100:
+        return 5
+    if rank < 500:
+        return 4
     if rank < 1000:
         return 3
     if rank < 3000:
@@ -78,26 +113,9 @@ def get_type_floor(floor, type):
     if type == 'zombie':
         return 1
     if type == 'alien':
-        return 1.25
+        return 2
     if type == 'traitless':
-        return 10
+        return 4
     if type == 'elon':
-        return 15
+        return 5
     return floor
-
-# def get_estimated_price(id, stats):
-#     type = get_nft_type(id)
-#     averaged_floor = (stats['thirty_day_average_price'] + stats['floor_price']) / 2
-#     last_sale = get_last_sale_price(id)['ETH_now']
-#     rarity = get_rarity(id)
-#     rarity_bonus = get_rarity_bonus(rarity)
-#     type_floor = get_type_floor(averaged_floor, type)
-
-#     return {
-#         'averaged_floor': averaged_floor,
-#         'last_sale': last_sale,
-#         'rarity': rarity,
-#         'rarity_bonus': rarity_bonus,
-#         'estimated': max(type_floor, averaged_floor * rarity_bonus, last_sale),
-#         'type': type
-#     }

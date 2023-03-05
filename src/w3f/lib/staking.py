@@ -1,4 +1,0 @@
-
-import w3f.lib.contracts.staking.doe_doe_staking_contract as doe_doe_staking_contract
-
-doe_doe_staking_contract.dump_all_stakers(hidden_details.etherscan_key)

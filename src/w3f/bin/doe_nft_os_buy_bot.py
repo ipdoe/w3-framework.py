@@ -19,9 +19,9 @@ TG_TEST_CHAN = hd.TG['test_channel']
 
 DSCRD_CHANS = bots.DscrdChannels()
 TG_CHAN = bots.TgChannel()
-CLIENT = bots.DscrdClient()
+CLIENT = bots.DscrdClient(DISCORD_TOKEN)
 COLLECTION_SLUG = 'dogs-of-elon'
-ETH_PRICE = co.EthPrice()
+ORACLE = co.EthOracle()
 METADATA = doe_nft_data.Metadata()
 
 def to_discord_embed(item: osea.ItemBase):
@@ -81,7 +81,7 @@ async def ws_loop():
             log.log("Connection OK")
             await subscribe(ws)
             while True:
-                os_event = osea.create_event(json.loads(await ws.recv()), ETH_PRICE.get())
+                os_event = osea.create_event(json.loads(await ws.recv()), ORACLE.get())
                 nft_event_q.put_nowait(os_event)
         except websockets.ConnectionClosed as cc:
             log.log(f'ConnectionClosed: {cc}')
@@ -96,16 +96,16 @@ async def on_ready():
     DSCRD_CHANS.init_with_hidden_details(CLIENT)
     await TG_CHAN.init(TG_TOKEN, TG_MAIN_CHAN, 'tg_main_chan')
     log.log("Channels initialized")
-    if not CLIENT.ready_called:
-        CLIENT.ready_called = True
-        ETH_PRICE.create_task()
+    if not CLIENT.ready:
+        CLIENT.ready = True
+        ORACLE.create_task()
         asyncio.create_task(ws_loop())
 
     await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
 
 def main():
     whoami.log_whoami()
-    CLIENT.run(DISCORD_TOKEN)
+    CLIENT.run()
 
 if __name__ == "__main__":
     main()

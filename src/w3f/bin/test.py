@@ -18,7 +18,7 @@ print(ns.name("0x5dA93cF2d5595Dd68Daed256DFbFF62c7ebBB298"))
 
 exit()
 COLLECTION_SLUG = 'dogs-of-elon'
-ETH_PRICE = co.EthPrice()
+ETH_PRICE = co.EthOracle()
 METADATA = doe_nft_data.Metadata()
 
 def to_discord_embed(item: osea.ItemBase):

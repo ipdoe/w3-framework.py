@@ -8,13 +8,13 @@ class SwapToken:
         self.tracker = tracker
         self.unit = unit
         self.decimals = decimals
-    
+
     def to_decimal(self, amount: decimal.Decimal):
         return Web3.fromWei(amount, self.unit)
-    
+
     def to_string(self, amount: decimal.Decimal):
         return f'{self.to_decimal(amount):,.{self.decimals}f} {self.tracker}'
-        
+
 
 class Swap:
     def __init__(self, abi, name, address, tokens: list[SwapToken], buy_idx=1) -> None:
@@ -39,7 +39,7 @@ class Swap:
         if self.is_buy(swap_data):
             return f"{Swap.green_red('🟢', usd_val)}\n{self.buy_msg(swap_data, usd_msg)}\n" \
                    f"addr: {swap_data.addr_link},  Tx: {swap_data.tx_link}"
-        
+
         return f"{Swap.green_red('🔴', usd_val)}\n{self.sell_msg(swap_data, usd_msg)}\n" \
                f"addr: {swap_data.addr_link},  Tx: {swap_data.tx_link}"
 

@@ -2,9 +2,80 @@ import discord
 import telegram as tg
 import w3f.lib.logger as log
 import w3f.hidden_details as hd
+from w3f.lib import kdoe_wealth
+from w3f.lib import doe_nft_data
+from w3f.lib import crypto_oracle
+from web3 import Web3
+from ens import ENS
+
+from telegram.ext import Application, CommandHandler, CallbackContext
+
+TG_MSG_LIMIT = 4096
+DSCRD_MSG_LIMIT = 2000
+
+class DscrdChannels:
+    def __init__(self) -> None:
+        self.doe_nft_listing = DscrdChannel(0)
+        self.doe_nft_sales = DscrdChannel(0)
+        self.doe_nft_floor = DscrdChannel(0)
+        self.doe_token_buys = DscrdChannel(0)
+        self.ipdoe_dbg = DscrdChannel(0)
+        self.ipdoe_nft = DscrdChannel(0)
+        self.ipdoe_nft_sales = DscrdChannel(0)
+        self.ipdoe_nft_listings = DscrdChannel(0)
+        self.ipdoe_nft_offers = DscrdChannel(0)
+        self.ipdoe_swaps = DscrdChannel(0)
+
+    def init_channels(self, client):
+        self.doe_nft_listing.set_channel(client)
+        self.doe_nft_sales.set_channel(client)
+        self.doe_nft_floor.set_channel(client)
+        self.doe_token_buys.set_channel(client)
+        self.ipdoe_dbg.set_channel(client)
+        self.ipdoe_nft.set_channel(client)
+        self.ipdoe_nft_sales.set_channel(client)
+        self.ipdoe_nft_listings.set_channel(client)
+        self.ipdoe_nft_offers.set_channel(client)
+        self.ipdoe_swaps.set_channel(client)
+
+    def init_with_hidden_details(self, client):
+        try:
+            self.ipdoe_dbg.id =          hd.dscrd["ipdoe_dbg"]
+            self.ipdoe_nft.id =          hd.dscrd["ipdoe_nft"]
+            self.ipdoe_nft_sales.id =    hd.dscrd["ipdoe_nft_sales"]
+            self.ipdoe_nft_listings.id = hd.dscrd["ipdoe_nft_listings"]
+            self.ipdoe_nft_offers.id =   hd.dscrd["ipdoe_nft_offers"]
+            self.ipdoe_swaps.id =        hd.dscrd["ipdoe_swaps"]
+
+            self.init_channels(client)
+        except Exception as e:
+            log.log("Failed to setup all ipdoe channels: " + str(e))
+
+class Services:
+    def __init__(self) -> None:
+        self.w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
+        self.ens = ENS.fromWeb3(self.w3)
+        self.nft_metadata = doe_nft_data.Metadata()
+        self.oracle = crypto_oracle.DoeNftOracle()
+
+    def to_address(self, wallet: str):
+        try:
+            return Web3.toChecksumAddress(wallet)
+        except Exception:
+            return self.ens.address(wallet)
+
+    def get_wealth(self, wallet):
+        return kdoe_wealth.Wealth(self.w3, wallet, self.nft_metadata, self.oracle.get())
 
 class DscrdClient(discord.Client):
-    ready_called = False
+    def __init__(self, token: str) -> None:
+        super().__init__()
+        self.ready = False
+        self.token = token
+        self.chans = DscrdChannels()
+
+    def run(self):
+        super().run(self.token)
 
 class Bots:
     def __init__(self, tg: tg.Bot) -> None:
@@ -13,6 +84,79 @@ class Bots:
     @staticmethod
     def init_none():
         return Bots(None)
+
+class DscrdBot(discord.Bot):
+    def __init__(self, token: str) -> None:
+        super().__init__()
+        self.ready = False
+        self.token = token
+        self.chans = DscrdChannels()
+
+    def run(self):
+        super().run(self.token)
+
+class WealthDscrdBot(DscrdBot):
+    def __init__(self, token: str, services: Services) -> None:
+        super().__init__(token)
+        self.services = services
+
+    async def event_on_ready(self):
+        if not self.ready:
+            self.ready = True
+            self.services.oracle.create_task()
+            self.chans.init_with_hidden_details(self)
+
+    async def cmd_wealth(self, ctx: discord.commands.context.ApplicationContext, wallet):
+        try:
+            wallet = self.services.to_address(wallet)
+            log.log(f"wallet: {wallet}")
+            await ctx.respond(f"``{wallet}``", ephemeral=True)
+            wealth = self.services.get_wealth(wallet)
+
+            for msg in wealth.to_msg_chunks(DSCRD_MSG_LIMIT - 10):
+                await ctx.respond(f"``{msg}``", ephemeral=True)
+
+        except Exception as e:
+            log.log(f"Failed: {wallet}\n{e}")
+            await ctx.respond(f"Command failed", ephemeral=True)
+
+class TgBot():
+    def __init__(self, token: str, services: Services) -> None:
+        self.services = services
+        self.app = Application.builder().token(token).build()
+        self.app.add_handler(CommandHandler("what_time", self.cmd_what_time))
+        self.app.add_handler(CommandHandler("wealth", self.cmd_wealth))
+
+    async def cmd_what_time(self, update: tg.Update, context) -> None:
+        await update.message.reply_text("It's KUDOE TIME 🧩!")
+
+    async def cmd_wealth(self, update: tg.Update, context: CallbackContext) -> None:
+        try:
+            wallet = self.services.to_address(context.args[0])
+            log.log(f"wallet: {wallet}")
+            await update.message.reply_text(f"`{wallet}`", parse_mode=tg.constants.ParseMode.MARKDOWN)
+            wealth = self.services.get_wealth(wallet)
+
+            for msg in wealth.to_msg_chunks(TG_MSG_LIMIT - 10):
+                await update.message.reply_text(f"{msg}", parse_mode=tg.constants.ParseMode.MARKDOWN)
+
+        except Exception as e:
+            log.log(f"Failed: {wallet}\n{e}")
+            await update.message.reply_text("Command failed")
+
+    async def start(self):
+        await self.app.initialize() # inits bot, update, persistence
+        await self.app.start()
+        await self.app.updater.start_polling()
+
+    async def stop(self):
+        await self.app.updater.stop()
+        await self.app.stop()
+        await self.app.shutdown()
+
+    def run(self):
+        self.app.run_polling()
+
 
 class TgChannel:
     def __init__(self) -> None:
@@ -74,41 +218,3 @@ class DscrdChannel:
                 log.log(f'Failed to send embed to discord {self.chan}: {e}')
                 return False
         return True
-
-class DscrdChannels:
-    def __init__(self) -> None:
-        self.doe_nft_listing = DscrdChannel(0)
-        self.doe_nft_sales = DscrdChannel(0)
-        self.doe_nft_floor = DscrdChannel(0)
-        self.doe_token_buys = DscrdChannel(0)
-        self.ipdoe_dbg = DscrdChannel(0)
-        self.ipdoe_nft = DscrdChannel(0)
-        self.ipdoe_nft_sales = DscrdChannel(0)
-        self.ipdoe_nft_listings = DscrdChannel(0)
-        self.ipdoe_nft_offers = DscrdChannel(0)
-        self.ipdoe_swaps = DscrdChannel(0)
-
-    def init_channels(self, client):
-        self.doe_nft_listing.set_channel(client)
-        self.doe_nft_sales.set_channel(client)
-        self.doe_nft_floor.set_channel(client)
-        self.doe_token_buys.set_channel(client)
-        self.ipdoe_dbg.set_channel(client)
-        self.ipdoe_nft.set_channel(client)
-        self.ipdoe_nft_sales.set_channel(client)
-        self.ipdoe_nft_listings.set_channel(client)
-        self.ipdoe_nft_offers.set_channel(client)
-        self.ipdoe_swaps.set_channel(client)
-
-    def init_with_hidden_details(self, client):
-        try:
-            self.ipdoe_dbg.id =          hd.dscrd["ipdoe_dbg"]
-            self.ipdoe_nft.id =          hd.dscrd["ipdoe_nft"]
-            self.ipdoe_nft_sales.id =    hd.dscrd["ipdoe_nft_sales"]
-            self.ipdoe_nft_listings.id = hd.dscrd["ipdoe_nft_listings"]
-            self.ipdoe_nft_offers.id =   hd.dscrd["ipdoe_nft_offers"]
-            self.ipdoe_swaps.id =        hd.dscrd["ipdoe_swaps"]
-            
-            self.init_channels(client)
-        except Exception as e:
-            log.log("Failed to setup all ipdoe channels: " + str(e))

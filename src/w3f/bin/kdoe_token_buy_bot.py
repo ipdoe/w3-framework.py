@@ -29,9 +29,9 @@ TG_MAIN_CHAN = hd.TG['main_channel']
 SWAPS = [kdoe_eth.swap]
 
 DSCRD_CHANS = bots.DscrdChannels()
-CLIENT = bots.DscrdClient()
+CLIENT = bots.DscrdClient(DISCORD_TOKEN)
 BOTS_ = bots.Bots.init_none()
-ETH_PRICE = co.EthPrice()
+ORACLE = co.EthOracle()
 
 def to_embed(message):
     embed = discord.Embed()
@@ -54,10 +54,10 @@ async def on_ready():
     except:
         log.log("TG inactive")
     DSCRD_CHANS.init_with_hidden_details(CLIENT)
-    if not CLIENT.ready_called:
-        CLIENT.ready_called = True
-        ETH_PRICE.create_task()
-        log.log("ETH_PRICE.create_task()")
+    if not CLIENT.ready:
+        CLIENT.ready = True
+        ORACLE.create_task()
+        log.log("ORACLE.create_task()")
         asyncio.create_task(ws_event_loop(SWAPS[0]))
         try:
             asyncio.create_task(ws_event_loop(SWAPS[1]))
@@ -68,10 +68,10 @@ async def on_ready():
 def get_usd_price(swap_data: ews.SwapData, swap: swap.Swap):
     token = swap.tokens[swap_data.in_t.id]
     if (token.tracker == 'eth'):
-        return float(token.to_decimal(swap_data.in_t.ammount)) * ETH_PRICE.get()
+        return float(token.to_decimal(swap_data.in_t.ammount)) * ORACLE.get()
     token = swap.tokens[swap_data.out_t.id]
     if (token.tracker == 'eth'):
-        return float(token.to_decimal(swap_data.out_t.ammount)) * ETH_PRICE.get()
+        return float(token.to_decimal(swap_data.out_t.ammount)) * ORACLE.get()
     return 0.0
 
 async def ws_event_loop(swap: swap.Swap):
@@ -98,7 +98,7 @@ async def ws_event_loop(swap: swap.Swap):
                     if (ll_event.reached_limit()):
                         await DSCRD_CHANS.ipdoe_dbg.send(log.slog(f'Exit swap {swap.name}: {e}'))
                         raise
-            
+
         except websockets.ConnectionClosed as cc:
             log.log(f'[token] ConnectionClosed: {cc}')
             await DSCRD_CHANS.ipdoe_dbg.send(f'[token] ConnectionClosed: {cc}')
@@ -108,7 +108,7 @@ async def ws_event_loop(swap: swap.Swap):
 
 def main():
     whoami.log_whoami()
-    CLIENT.run(DISCORD_TOKEN)
+    CLIENT.run()
 
 if __name__ == "__main__":
     main()

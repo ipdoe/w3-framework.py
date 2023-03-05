@@ -21,6 +21,12 @@ def log_json(msg):
     except:
         _internal_log(msg)
 
+def to_json_str(msg):
+    try:
+        return json.dumps(msg, indent=2)
+    except:
+        return ""
+
 def log_version():
     _internal_log(f'{os.path.basename(sys.argv[0])}-{git_describe()}')
 

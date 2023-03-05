@@ -1,19 +1,24 @@
+import pathlib
 from web3 import Web3
 from  w3f.lib.contracts.staking import kdoe_rewards_abi
 import requests, datetime, json
+from collections import namedtuple
 
 contract_address = "0xF541Ab2f4DBa2071B12DA99a9Ee83B0C4b719d95"
 CREATION_BLOCK = 16395899
+
+StakingBalance = namedtuple("StakingBalance", ["staked", "rewards"])
 
 def get_balance(w3, wallet, block_identifier='latest'):
     contract = w3.eth.contract(address=contract_address, abi=kdoe_rewards_abi.get_abi())
     balanceOf =  Web3.fromWei(contract.functions.balanceOf(wallet).call(block_identifier=block_identifier), "ether")
     earned = Web3.fromWei(contract.functions.earned(wallet).call(block_identifier=block_identifier), "ether")
+    return StakingBalance(balanceOf, earned)
 
-    return {
-        "Staked": balanceOf,
-        "Rewards": earned,
-        }
+def address_to_token(w3, wallet, block_identifier='latest'):
+    contract = w3.eth.contract(address=contract_address, abi=kdoe_rewards_abi.get_abi())
+    nftList = contract.functions.addressToToken(wallet).call(block_identifier=block_identifier)
+    return nftList
 
 def all_doe_stake_transactions_since(api_key, start_block):
     data = {
@@ -48,10 +53,9 @@ def get_all_balances(w3, addr_list, block_identifier='latest'):
     hodlers = {}
     for addr in addr_list:
         balance = get_balance(w3, addr, block_identifier)
-        total = float(balance['Staked'] + balance['Rewards'])
+        total = sum(balance)
         if (total > 0.0):
-            balance_summary = [addr, total, float(balance['Staked']), float(balance['Rewards'])]
-            holders_lst.append(balance_summary)
+            holders_lst.append([addr, total, float(balance.staked), float(balance.rewards)])
     holders_lst.sort(key=lambda x: x[1], reverse=True)
 
     for hodler in holders_lst:
@@ -59,17 +63,16 @@ def get_all_balances(w3, addr_list, block_identifier='latest'):
     return hodlers
 
 def get_sorted_balances(w3, addr_list, block_identifier='latest'):
-    print(len(addr_list))
+    print(f"Stakers count: {len(addr_list)}")
     holders_lst = []
     hodlers = {}
     cnt = 0
     for addr in addr_list:
         balance = get_balance(w3, addr, block_identifier)
-        total = float(balance['Staked'] + balance['Rewards'])
-        if (cnt % 20) == 0: print(cnt)
+        total = sum(balance)
+        if (cnt % 20) == 0: print(f"Processed: {cnt}")
         if (total > 0.0):
-            balance_summary = [addr, total, float(balance['Staked']), float(balance['Rewards'])]
-            holders_lst.append(balance_summary)
+            holders_lst.append([addr, total, float(balance.staked), float(balance.rewards)])
         cnt = cnt + 1
     holders_lst.sort(key=lambda x: x[1], reverse=True)
 
@@ -77,10 +80,19 @@ def get_sorted_balances(w3, addr_list, block_identifier='latest'):
         hodlers[hodler[0]] = {"total": hodler[1], "staked": hodler[2], "rewards": hodler[3]}
     return hodlers
 
-def dump_hodlers_json(path, hodlers):
-    # todo: last comma in the file is not json compatible
+def dump_hodlers_json(path, hodlers: dict):
     with open(path, 'w') as w:
         w.write("{")
+        lowest_hodler = hodlers.popitem()
         for hodler in hodlers:
             w.write(f'\"{hodler}\": {json.dumps(hodlers[hodler])},\n')
+        w.write(f'\"{lowest_hodler[0]}\": {json.dumps(lowest_hodler[1])}\n')
         w.write("}\n")
+
+def dump_sorted_stakers_json(w3, etherscan_key, path):
+    block = w3.eth.block_number
+    target = pathlib.Path(path) / f"kdoe_stakers_{block}.json"
+    print(f"Snapshot: {block}")
+    print(f"Target file: {target}")
+    hodlers = get_sorted_balances(w3, dump_all_stakers(etherscan_key), block)
+    dump_hodlers_json(target, hodlers)
