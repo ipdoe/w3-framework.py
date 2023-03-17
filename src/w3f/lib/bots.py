@@ -134,11 +134,10 @@ class TgBot():
         try:
             wallet = self.services.to_address(context.args[0])
             log.log(f"wallet: {wallet}")
-            await update.message.reply_text(f"`{wallet}`", parse_mode=tg.constants.ParseMode.MARKDOWN)
-            wealth = self.services.get_wealth(wallet)
 
+            wealth = self.services.get_wealth(wallet)
             for msg in wealth.to_msg_chunks(TG_MSG_LIMIT - 10):
-                await update.message.reply_text(f"{msg}", parse_mode=tg.constants.ParseMode.MARKDOWN)
+                await update.message.reply_text(f"{msg}")
 
         except Exception as e:
             log.log(f"Failed: {wallet}\n{e}")
