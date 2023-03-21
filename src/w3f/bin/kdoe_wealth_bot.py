@@ -25,6 +25,10 @@ async def on_ready():
 async def wealth(ctx: discord.commands.context.ApplicationContext, wallet):
     await dscrd_bot.cmd_wealth(ctx, wallet)
 
+@dscrd_bot.command(description="What's the time?")
+async def what_time(ctx: discord.commands.context.ApplicationContext):
+    await dscrd_bot.cmd_what_time(ctx)
+
 def main():
     whoami.log_whoami(BASENAME)
     dscrd_bot.loop.create_task(tgBot.start())

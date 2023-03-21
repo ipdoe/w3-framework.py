@@ -120,6 +120,9 @@ class WealthDscrdBot(DscrdBot):
             log.log(f"Failed: {wallet}\n{e}")
             await ctx.respond(f"Command failed", ephemeral=True)
 
+    async def cmd_what_time(self, ctx: discord.commands.context.ApplicationContext):
+        await ctx.respond("It's KUDOE TIME 🧩!")
+
 class TgBot():
     def __init__(self, token: str, services: Services) -> None:
         self.services = services
