@@ -46,6 +46,9 @@ class DscrdChannels:
             self.ipdoe_nft_listings.id = hd.dscrd["ipdoe_nft_listings"]
             self.ipdoe_nft_offers.id =   hd.dscrd["ipdoe_nft_offers"]
             self.ipdoe_swaps.id =        hd.dscrd["ipdoe_swaps"]
+            self.doe_nft_listing.id =    hd.dscrd.get("doe_nft_listing", 0)
+            self.doe_nft_sales.id =      hd.dscrd.get("doe_nft_sales", 0)
+            self.doe_nft_floor.id =      hd.dscrd.get("doe_nft_floor", 0)
 
             self.init_channels(client)
         except Exception as e:
