@@ -18,14 +18,16 @@ class MainnetKdoe(namedtuple("MainnetKdoe", ["mainnet", "staking"])):
         return self.mainnet + sum(self.staking)
 
 class Wealth():
-    def __init__(self, w3, wallet, metadata: doe_nft_data.Metadata = None,
+    def __init__(self, w3, w3_bsc, wallet, metadata: doe_nft_data.Metadata = None,
                  collection_stats: doe_nft_data.CollectionStats = None):
         self.w3 = w3
+        self.w3_bsc = w3_bsc
         self.wallet = Web3.toChecksumAddress(wallet)
         self._metadata = metadata
         self._collection_stats = collection_stats
-        self.mainnet = get_mainet_kdoe(w3, self.wallet)
-        self.nfts = get_nft_holdings_stats(w3, self.wallet, metadata, collection_stats)
+        self.mainnet = get_mainet_kdoe(self.w3, self.wallet)
+        self.nfts = get_nft_holdings_stats(self.w3, self.wallet, metadata, collection_stats)
+        self.bsc = kdoe_token.get_bsc_balance(self.w3_bsc, self.wallet)
 
     def total(self):
         return self.mainnet + sum(self.staking)
@@ -45,6 +47,7 @@ class Wealth():
 
     def _mainnet_to_str(self):
         return f"Mainnet: {self.mainnet.total():{kdoe_fmt()}} KDOE\n" \
+               f"BSC: {self.bsc:{kdoe_fmt()}} KDOE\n" \
                f"NFT Count: {self.nfts['nft_cnt']}\n" \
                f"NFTs estimate: {self.nfts['nft_total']:,.4f} ETH\n"
 

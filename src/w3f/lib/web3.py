@@ -18,3 +18,9 @@ class W3:
         average_block = average_time / self.avg_block_time
 
         return int(self.w3.eth.block_number - average_block)
+
+class AnkrBsc:
+    BSC_URL = "https://rpc.ankr.com/bsc"
+
+    def __init__(self, url = BSC_URL) -> None:
+        self.w3 = Web3(Web3.HTTPProvider(url))

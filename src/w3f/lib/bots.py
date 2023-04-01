@@ -5,6 +5,7 @@ import w3f.hidden_details as hd
 from w3f.lib import kdoe_wealth
 from w3f.lib import doe_nft_data
 from w3f.lib import crypto_oracle
+from w3f.lib import web3
 from web3 import Web3
 from ens import ENS
 
@@ -57,6 +58,7 @@ class DscrdChannels:
 class Services:
     def __init__(self) -> None:
         self.w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
+        self.w3_bsc = web3.AnkrBsc()
         self.ens = ENS.fromWeb3(self.w3)
         self.nft_metadata = doe_nft_data.Metadata()
         self.oracle = crypto_oracle.DoeNftOracle()
@@ -68,7 +70,7 @@ class Services:
             return self.ens.address(wallet)
 
     def get_wealth(self, wallet):
-        return kdoe_wealth.Wealth(self.w3, wallet, self.nft_metadata, self.oracle.get())
+        return kdoe_wealth.Wealth(self.w3, self.w3_bsc.w3, wallet, self.nft_metadata, self.oracle.get())
 
 class DscrdClient(discord.Client):
     def __init__(self, token: str) -> None:
