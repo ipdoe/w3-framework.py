@@ -190,7 +190,7 @@ class TgChannel:
     async def send_text(self, md_msg: str):
         if self.bot is not None:
             try:
-                await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.ParseMode.MARKDOWN,
+                await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.constants.ParseMode.MARKDOWN,
                 disable_web_page_preview=True, text=md_msg)
             except Exception as e:
                 log.log(f'Failed to send msg to tg({self.chat_id}): {e}')
@@ -198,7 +198,7 @@ class TgChannel:
     async def send_with_img(self, md_msg: str):
         if self.bot is not None:
             try:
-                await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.ParseMode.MARKDOWN, text=md_msg)
+                await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.constants.ParseMode.MARKDOWN, text=md_msg)
             except Exception as e:
                 log.log(f'Failed to send msg to tg({self.chat_id}): {e}')
 

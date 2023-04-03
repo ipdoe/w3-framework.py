@@ -12,13 +12,14 @@ import w3f.hidden_details as hd
 ######## Details required from the user
 import w3f.hidden_details as hd
 DISCORD_TOKEN = hd.dscrd['token']
-TG_TOKEN = hd.TG['token']
-TG_MAIN_CHAN = hd.TG['main_channel']
-TG_TEST_CHAN = hd.TG['test_channel']
+TG_TOKEN = hd.TG['doe_buy_token']
+TG_KUDOE_CHAN_ID = hd.TG['kudoe_channel']
+TG_TEST_CHAN_ID = hd.TG['test_channel']
 ######## Details required from the user
 
 DSCRD_CHANS = bots.DscrdChannels()
-TG_CHAN = bots.TgChannel()
+TG_KUDOE_CHAN = bots.TgChannel()
+TG_TEST_CHAN = bots.TgChannel()
 CLIENT = bots.DscrdClient(DISCORD_TOKEN)
 COLLECTION_SLUG = 'dogs-of-elon'
 ORACLE = co.EthOracle()
@@ -53,7 +54,8 @@ async def send_event(event):
                     ####  ITME SOLD --> Tell the world!!!!
                     msg_sent = await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
                     await DSCRD_CHANS.doe_nft_sales.send(embed)
-                    await TG_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
+                    await TG_KUDOE_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
+                    await TG_TEST_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
                     ####  ITME SOLD --> Tell the world!!!!
                 elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
                     msg_sent = await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
@@ -94,7 +96,8 @@ async def ws_loop():
 async def on_ready():
     log.log("Discord ready")
     DSCRD_CHANS.init_with_hidden_details(CLIENT)
-    await TG_CHAN.init(TG_TOKEN, TG_MAIN_CHAN, 'tg_main_chan')
+    await TG_KUDOE_CHAN.init(TG_TOKEN, TG_KUDOE_CHAN_ID, 'tg_kudoe_chan')
+    await TG_TEST_CHAN.init(TG_TOKEN, TG_TEST_CHAN_ID, 'tg_test_chan')
     log.log("Channels initialized")
     if not CLIENT.ready:
         CLIENT.ready = True
