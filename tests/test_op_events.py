@@ -1,6 +1,7 @@
 
-import json, os
-from venv import create
+import json, pytest
+
+from datetime import datetime, timedelta, timezone
 from w3f.lib import op_events
 from w3f.lib import logger as log
 
@@ -60,3 +61,18 @@ def test__create_event():
 
 def test__get_os_username():
     assert op_events.get_os_username("0x5dA93cF2d5595Dd68Daed256DFbFF62c7ebBB298")
+
+def test__Timestamp__Ctor():
+    ts = op_events.Timestamp.make("2023-04-07T05:28:41.995495+00:00")
+    assert ts
+    assert ts == ts
+    assert not ts < ts
+    assert ts - timedelta(hours=1) < ts
+    assert ts < datetime.now(timezone.utc)
+    with pytest.raises(ValueError):
+        op_events.Timestamp.make("2023-04-07 05:28:41.995495+00:00")
+
+def test__Timestamp__older_than():
+    ts = datetime.now(timezone.utc) - timedelta(minutes=30)
+    assert op_events.Timestamp.make(ts).older_than(timedelta(minutes=25))
+    assert not op_events.Timestamp.make(ts).older_than()

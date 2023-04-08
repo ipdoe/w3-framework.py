@@ -44,27 +44,32 @@ async def send_event(event):
     msg_sent = False
     while not msg_sent:
         try:
-            if isinstance(event, osea.ItemBase):
-                embed = to_discord_embed(event)
-                log.log(embed.description)
-                if type(event) is osea.ItemListed:
-                    msg_sent = await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
-                    await DSCRD_CHANS.doe_nft_listing.send(embed)
-                elif type(event) is osea.ItemSold:
-                    ####  ITME SOLD --> Tell the world!!!!
-                    msg_sent = await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
-                    await DSCRD_CHANS.doe_nft_sales.send(embed)
-                    await TG_KUDOE_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
-                    await TG_TEST_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
-                    ####  ITME SOLD --> Tell the world!!!!
-                elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
-                    msg_sent = await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
-                await DSCRD_CHANS.ipdoe_nft.send(embed)
+            if event.timestamp.older_than():
+                msg_sent = await DSCRD_CHANS.ipdoe_dbg.send(f"Older than: {event.base_describe()}")
+                log.log(f"Older than: {event.base_describe()}")
+            else:
+                if isinstance(event, osea.ItemBase):
+                    embed = to_discord_embed(event)
+                    log.log(embed.description)
+                    if type(event) is osea.ItemListed:
+                        msg_sent = await DSCRD_CHANS.ipdoe_nft_listings.send(embed)
+                        await DSCRD_CHANS.doe_nft_listing.send(embed)
+                    elif type(event) is osea.ItemSold:
+                        ####  ITME SOLD --> Tell the world!!!!
+                        msg_sent = await DSCRD_CHANS.ipdoe_nft_sales.send(embed)
+                        await DSCRD_CHANS.doe_nft_sales.send(embed)
+                        await TG_KUDOE_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
+                        await TG_TEST_CHAN.send_with_img(f'[ ]({event.img_url()}){embed.description}')
+                        ####  ITME SOLD --> Tell the world!!!!
+                    elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
+                        msg_sent = await DSCRD_CHANS.ipdoe_nft_offers.send(embed)
+                    await DSCRD_CHANS.ipdoe_nft.send(embed)
 
-            log.log(event.base_describe())
-            msg_sent |= await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
+                msg_sent |= await DSCRD_CHANS.ipdoe_dbg.send(event.base_describe())
+                log.log(event.base_describe())
         except Exception as e:
             log.log(f'Exception: {e}')
+            await asyncio.sleep(1)
 
 async def dequeu_loop(nft_event_q: asyncio.Queue):
     log.log("Dequeuing")

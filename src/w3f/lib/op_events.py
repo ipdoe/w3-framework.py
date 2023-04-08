@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import requests
 
 EVENTS=['item_metadata_updated', 'item_listed', 'item_sold', 'item_transferred',
@@ -5,6 +6,22 @@ EVENTS=['item_metadata_updated', 'item_listed', 'item_sold', 'item_transferred',
 
 def short_hex(hex: str, chars=8):
     return hex[0:chars]
+
+class Timestamp(datetime):
+    def __new__(cls, year, month=None, day=None, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
+        return super().__new__(cls, year, month, day, hour, minute, second, microsecond, tzinfo)
+
+    def make(date_time):
+        dt: datetime
+        if isinstance(date_time, str):
+            dt = datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        else:
+            dt = date_time
+
+        return Timestamp(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond, dt.tzinfo)
+
+    def older_than(self, time_delta = timedelta(hours=1)):
+        return (self + time_delta) < datetime.now(timezone.utc)
 
 class PaymentToken:
     def __init__(self, json_d: dict) -> None:
@@ -29,8 +46,8 @@ class EventBase:
         self.event_type = self._dict['event']
         self.title = self.event_type
         self.payload = self._dict['payload']
-        self.timestamp = self.payload['payload']['event_timestamp']
-        self.sent_at = self.payload['sent_at']
+        self.timestamp = Timestamp.make(self.payload['payload']['event_timestamp'])
+        self.sent_at = Timestamp.make(self.payload['sent_at'])
 
     def announcement(self):
         return f'{self.title}'
