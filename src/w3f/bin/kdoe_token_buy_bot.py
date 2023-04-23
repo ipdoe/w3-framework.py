@@ -9,8 +9,7 @@ import w3f.lib.logger as log
 import w3f.lib.crypto_oracle as co
 from w3f.lib.contracts import kdoe_eth
 from w3f.lib import whoami
-from w3f.lib import web3
-from web3 import Web3
+from w3f.lib.web3 import W3, GetBlockBsc, InfuraEth
 from ens import ENS
 
 # For testing with other contracts
@@ -26,10 +25,6 @@ TG_TOKEN = "hd.TG['token']"
 TG_MAIN_CHAN = "hd.TG['main_channel']"
 ######## Details required from the user
 
-class W3:
-    def __init__(self, http_provider: str, ws: str) -> None:
-        self.w3 = Web3(Web3.HTTPProvider(http_provider))
-        self.ws = ws
 
 # swaps = [usdc_eth.swap, eth_usdt.swap]
 SWAPS = [kdoe_eth.swap]
@@ -38,8 +33,8 @@ DSCRD_CHANS = bots.DscrdChannels()
 CLIENT = bots.DscrdClient(DISCORD_TOKEN)
 BOTS_ = bots.Bots.init_none()
 ORACLE = co.EthOracle()
-W3_ETH = W3(hd.eth_mainnet, hd.eth_mainnet_ws)
-W3_BSC = W3(web3.GetBlockBsc.url(hd.GETBLOCK_KEY), web3.GetBlockBsc.ws_url(hd.GETBLOCK_KEY))
+W3_ETH = InfuraEth(hd.infura_key)
+W3_BSC = GetBlockBsc(hd.GETBLOCK_KEY)
 
 def to_embed(message):
     embed = discord.Embed()
