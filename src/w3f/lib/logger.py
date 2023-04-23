@@ -12,8 +12,14 @@ def _internal_log(msg, n=1):
 def slog(msg):
     return _internal_slog(msg)
 
+def slog_parent(msg):
+    return _internal_slog(msg, 2)
+
 def log(msg):
     _internal_log(msg)
+
+def log_parent(msg):
+    _internal_log(msg, 2)
 
 def log_json(msg):
     try:

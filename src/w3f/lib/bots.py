@@ -58,7 +58,7 @@ class DscrdChannels:
 class Services:
     def __init__(self) -> None:
         self.w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
-        self.w3_bsc = web3.AnkrBsc()
+        self.w3_bsc = web3.GetBlockBsc(hd.GETBLOCK_KEY)
         self.ens = ENS.fromWeb3(self.w3)
         self.nft_metadata = doe_nft_data.Metadata()
         self.oracle = crypto_oracle.DoeNftOracle()
@@ -225,3 +225,7 @@ class DscrdChannel:
                 log.log(f'Failed to send embed to discord {self.chan}: {e}')
                 return False
         return True
+
+    async def send_and_log(self, message):
+        if await self.send(log.slog_parent(message)):
+            log.log_parent(message)

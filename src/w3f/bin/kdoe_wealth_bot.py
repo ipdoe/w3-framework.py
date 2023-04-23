@@ -19,7 +19,7 @@ tgBot = bots.TgBot(TG_TOKEN, services)
 @dscrd_bot.event
 async def on_ready():
     await dscrd_bot.event_on_ready()
-    await dscrd_bot.chans.ipdoe_dbg.send(f"Start: {BASENAME} {whoami.get_whoami()}")
+    await dscrd_bot.chans.ipdoe_dbg.send_and_log(f"Start: {BASENAME} {whoami.get_whoami()}")
 
 @dscrd_bot.command(description="Get your Kudoe wealth")
 async def wealth(ctx: discord.commands.context.ApplicationContext, wallet):

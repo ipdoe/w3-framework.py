@@ -17,7 +17,7 @@ class SwapToken:
 
 
 class Swap:
-    def __init__(self, abi, name, address, tokens: list[SwapToken], buy_idx=1) -> None:
+    def __init__(self, abi, name, address, tokens: list[SwapToken], buy_idx=1, buy_char='🧩') -> None:
         self.abi = abi
         self.name = name
         self.address = address
@@ -25,6 +25,7 @@ class Swap:
         self.buy_idx = buy_idx
         self.buy_token = self.tokens[self.buy_idx]
         self.sell_token = self.tokens[1 - self.buy_idx]
+        self.buy_char = buy_char
 
     @staticmethod
     def green_red(char, usd_val):
@@ -37,7 +38,7 @@ class Swap:
         usd_msg = f" (${usd_val:,.2f})" if usd_val > 0.0 else ""
 
         if self.is_buy(swap_data):
-            return f"{Swap.green_red('🟢', usd_val)}\n{self.buy_msg(swap_data, usd_msg)}\n" \
+            return f"{Swap.green_red(self.buy_char, usd_val)}\n{self.buy_msg(swap_data, usd_msg)}\n" \
                    f"addr: {swap_data.addr_link},  Tx: {swap_data.tx_link}"
 
         return f"{Swap.green_red('🔴', usd_val)}\n{self.sell_msg(swap_data, usd_msg)}\n" \

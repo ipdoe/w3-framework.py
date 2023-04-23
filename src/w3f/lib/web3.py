@@ -20,7 +20,22 @@ class W3:
         return int(self.w3.eth.block_number - average_block)
 
 class AnkrBsc:
-    BSC_URL = "https://rpc.ankr.com/bsc"
+    URL = "https://rpc.ankr.com/bsc"
 
-    def __init__(self, url = BSC_URL) -> None:
-        self.w3 = Web3(Web3.HTTPProvider(url))
+    def __init__(self) -> None:
+        self.w3 = Web3(Web3.HTTPProvider(self.URL))
+
+class GetBlockBsc:
+    URL = "https://bsc.getblock.io/{}/mainnet/"
+    WS = "wss://bsc.getblock.io/{}/mainnet/"
+
+    def __init__(self, api_key: str) -> None:
+        self.w3 = Web3(Web3.HTTPProvider(self.url(api_key)))
+
+    @classmethod
+    def ws_url(cls, api: str):
+        return cls.WS.format(api)
+
+    @classmethod
+    def url(cls, api: str):
+        return cls.URL.format(api)

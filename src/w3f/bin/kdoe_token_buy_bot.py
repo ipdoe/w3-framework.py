@@ -2,13 +2,14 @@
 
 import asyncio, discord, websockets, os
 import telegram as tg
-import w3f.lib.swap as swap
+import w3f.lib.swap as SWAP
 import w3f.lib.eth_event_socket as ews
 import w3f.lib.bots as bots
 import w3f.lib.logger as log
 import w3f.lib.crypto_oracle as co
 from w3f.lib.contracts import kdoe_eth
 from w3f.lib import whoami
+from w3f.lib import web3
 from web3 import Web3
 from ens import ENS
 
@@ -21,17 +22,24 @@ import w3f.lib.contracts.eth_usdt as eth_usdt
 import w3f.hidden_details as hd
 INFURA_KEY = hd.infura_key
 DISCORD_TOKEN = hd.dscrd['token']
-TG_TOKEN = hd.TG['token']
-TG_MAIN_CHAN = hd.TG['main_channel']
+TG_TOKEN = "hd.TG['token']"
+TG_MAIN_CHAN = "hd.TG['main_channel']"
 ######## Details required from the user
+
+class W3:
+    def __init__(self, http_provider: str, ws: str) -> None:
+        self.w3 = Web3(Web3.HTTPProvider(http_provider))
+        self.ws = ws
 
 # swaps = [usdc_eth.swap, eth_usdt.swap]
 SWAPS = [kdoe_eth.swap]
-
+BSC_SWAP = kdoe_eth.BSC_SWAP
 DSCRD_CHANS = bots.DscrdChannels()
 CLIENT = bots.DscrdClient(DISCORD_TOKEN)
 BOTS_ = bots.Bots.init_none()
 ORACLE = co.EthOracle()
+W3_ETH = W3(hd.eth_mainnet, hd.eth_mainnet_ws)
+W3_BSC = W3(web3.GetBlockBsc.url(hd.GETBLOCK_KEY), web3.GetBlockBsc.ws_url(hd.GETBLOCK_KEY))
 
 def to_embed(message):
     embed = discord.Embed()
@@ -58,14 +66,16 @@ async def on_ready():
         CLIENT.ready = True
         ORACLE.create_task()
         log.log("ORACLE.create_task()")
-        asyncio.create_task(ws_event_loop(SWAPS[0]))
+        asyncio.create_task(ws_event_loop(W3_ETH, SWAPS[0]))
         try:
-            asyncio.create_task(ws_event_loop(SWAPS[1]))
+            asyncio.create_task(ws_event_loop(W3_ETH, SWAPS[1]))
+        except: pass
+        try:
+            asyncio.create_task(ws_event_loop(W3_BSC, BSC_SWAP))
         except: pass
     await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
-    await DSCRD_CHANS.ipdoe_swaps.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
 
-def get_usd_price(swap_data: ews.SwapData, swap: swap.Swap):
+def get_usd_price(swap_data: ews.SwapData, swap: SWAP.Swap):
     token = swap.tokens[swap_data.in_t.id]
     if (token.tracker == 'eth'):
         return float(token.to_decimal(swap_data.in_t.ammount)) * ORACLE.get()
@@ -74,16 +84,14 @@ def get_usd_price(swap_data: ews.SwapData, swap: swap.Swap):
         return float(token.to_decimal(swap_data.out_t.ammount)) * ORACLE.get()
     return 0.0
 
-async def ws_event_loop(swap: swap.Swap):
+async def ws_event_loop(w3: W3, swap: SWAP.Swap):
     log.log(f"asyncio.create_task(ws_event_loop({swap.name}))")
-    w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
-    print(f"Connected to Web3: {w3.isConnected()}")
-    name_service = ENS.fromWeb3(w3)
-    async for ws in websockets.connect(hd.eth_mainnet_ws):
+    print(f"Connected to Web3: {w3.w3.isConnected()}")
+    name_service = ENS.fromWeb3(w3.w3)
+    async for ws in websockets.connect(w3.ws):
         try:
             subscription = await ews.subscribe_swap(ws, swap.address)
-            log.log(f'Socket subscription {swap.name} [{INFURA_KEY[0:5]}...]: {subscription}')
-            await DSCRD_CHANS.ipdoe_dbg.send(log.slog(f'Entered swap {swap.name}'))
+            await DSCRD_CHANS.ipdoe_dbg.send_and_log(f'Socket subscription {swap.name}: {subscription}')
             ll_event = log.LogLatch()
             while True:
                 try:
@@ -96,15 +104,13 @@ async def ws_event_loop(swap: swap.Swap):
                 except Exception as e:
                     ll_event.log(f'{e}')
                     if (ll_event.reached_limit()):
-                        await DSCRD_CHANS.ipdoe_dbg.send(log.slog(f'Exit swap {swap.name}: {e}'))
+                        await DSCRD_CHANS.ipdoe_dbg.send_and_log(f'Exit swap {swap.name}: {e}')
                         raise
 
         except websockets.ConnectionClosed as cc:
-            log.log(f'[token] ConnectionClosed: {cc}')
-            await DSCRD_CHANS.ipdoe_dbg.send(f'[token] ConnectionClosed: {cc}')
+            await DSCRD_CHANS.ipdoe_dbg.send_and_log(f'[token] ConnectionClosed: {cc}')
         except Exception as e:
-            log.log(f'[token] Exception: {e}')
-            await DSCRD_CHANS.ipdoe_dbg.send(f'[token] Exception: {e}')
+            await DSCRD_CHANS.ipdoe_dbg.send_and_log(f'[token] Exception: {e}')
 
 def main():
     whoami.log_whoami()
