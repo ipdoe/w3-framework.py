@@ -26,13 +26,14 @@ TG_MAIN_CHAN = "hd.TG['main_channel']"
 ######## Details required from the user
 
 
-# swaps = [usdc_eth.swap, eth_usdt.swap]
-SWAPS = [kdoe_eth.swap]
-BSC_SWAP = kdoe_eth.BSC_SWAP
+# SWAPS = [usdc_eth.SWAP, eth_usdt.SWAP]
+SWAPS = [kdoe_eth.ETH_SWAP]
+BSC_SWAP = kdoe_eth.BNB_SWAP
 DSCRD_CHANS = bots.DscrdChannels()
 CLIENT = bots.DscrdClient(DISCORD_TOKEN)
 BOTS_ = bots.Bots.init_none()
-ORACLE = co.EthOracle()
+ETH_ORACLE = co.EthOracle()
+BNB_ORACLE = co.BnbOracle()
 W3_ETH = InfuraEth(hd.infura_key)
 W3_BSC = GetBlockBsc(hd.GETBLOCK_KEY)
 
@@ -59,27 +60,27 @@ async def on_ready():
     DSCRD_CHANS.init_with_hidden_details(CLIENT)
     if not CLIENT.ready:
         CLIENT.ready = True
-        ORACLE.create_task()
-        log.log("ORACLE.create_task()")
-        asyncio.create_task(ws_event_loop(W3_ETH, SWAPS[0]))
+        ETH_ORACLE.create_task()
+        BNB_ORACLE.create_task()
+        asyncio.create_task(ws_event_loop(W3_ETH, SWAPS[0], ETH_ORACLE))
         try:
-            asyncio.create_task(ws_event_loop(W3_ETH, SWAPS[1]))
+            asyncio.create_task(ws_event_loop(W3_ETH, SWAPS[1], ETH_ORACLE))
         except: pass
         try:
-            asyncio.create_task(ws_event_loop(W3_BSC, BSC_SWAP))
+            asyncio.create_task(ws_event_loop(W3_BSC, BSC_SWAP, BNB_ORACLE))
         except: pass
     await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
 
-def get_usd_price(swap_data: ews.SwapData, swap: SWAP.Swap):
+def get_usd_price(swap_data: ews.SwapData, swap: SWAP.Swap, oracle):
     token = swap.tokens[swap_data.in_t.id]
-    if (token.tracker == 'eth'):
-        return float(token.to_decimal(swap_data.in_t.ammount)) * ORACLE.get()
+    if (token.tracker != 'kdoe'):
+        return float(token.to_decimal(swap_data.in_t.ammount)) * oracle.get()
     token = swap.tokens[swap_data.out_t.id]
-    if (token.tracker == 'eth'):
-        return float(token.to_decimal(swap_data.out_t.ammount)) * ORACLE.get()
+    if (token.tracker == 'kdoe'):
+        return float(token.to_decimal(swap_data.out_t.ammount)) * oracle.get()
     return 0.0
 
-async def ws_event_loop(w3: W3, swap: SWAP.Swap):
+async def ws_event_loop(w3: W3, swap: SWAP.Swap, oracle):
     log.log(f"asyncio.create_task(ws_event_loop({swap.name}))")
     print(f"Connected to Web3: {w3.w3.isConnected()}")
     name_service = ENS.fromWeb3(w3.w3)
@@ -92,7 +93,7 @@ async def ws_event_loop(w3: W3, swap: SWAP.Swap):
                 try:
                     swap_data = await ews.wait_swap(name_service, ws)
                     if swap_data is not None:
-                        text_msg = swap.buy_sell_msg(swap_data, get_usd_price(swap_data, swap))
+                        text_msg = swap.buy_sell_msg(swap_data, get_usd_price(swap_data, swap, oracle))
                         log.log(text_msg)
                         await DSCRD_CHANS.ipdoe_swaps.send(to_embed(text_msg))
                         ll_event.reset()
