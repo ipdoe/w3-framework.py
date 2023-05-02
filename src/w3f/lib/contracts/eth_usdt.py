@@ -6,4 +6,4 @@ name = 'eth-usdt'
 tokens = [swap.SwapToken('eth', 'ether', decimals=4),
           swap.SwapToken('usdt', 'mwei', decimals=2)]
 abi = eth_usdt_abi.get_abi()
-SWAP = swap.Swap(abi, name, address, tokens)
+SWAP = swap.Swap(abi, name, address, tokens, 0)

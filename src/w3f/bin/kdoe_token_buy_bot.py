@@ -71,29 +71,19 @@ async def on_ready():
         except: pass
     await DSCRD_CHANS.ipdoe_dbg.send(f"Start: {os.path.basename(__file__)} {whoami.get_whoami()}")
 
-def get_usd_price(swap_data: ews.SwapData, swap: SWAP.Swap, oracle):
-    token = swap.tokens[swap_data.in_t.id]
-    if (token.tracker != 'kdoe'):
-        return float(token.to_decimal(swap_data.in_t.ammount)) * oracle.get()
-    token = swap.tokens[swap_data.out_t.id]
-    if (token.tracker == 'kdoe'):
-        return float(token.to_decimal(swap_data.out_t.ammount)) * oracle.get()
-    return 0.0
-
 async def ws_event_loop(w3: W3, swap: SWAP.Swap, oracle):
     log.log(f"asyncio.create_task(ws_event_loop({swap.name}))")
     print(f"Connected to Web3: {w3.w3.isConnected()}")
-    name_service = ENS.fromWeb3(w3.w3)
     async for ws in websockets.connect(w3.ws):
         try:
-            subscription = await ews.subscribe_swap(ws, swap.address)
+            subscription = await ews.SwapData.subscribe(ws, swap.address)
             await DSCRD_CHANS.ipdoe_dbg.send_and_log(f'Socket subscription {swap.name}: {subscription}')
             ll_event = log.LogLatch()
             while True:
                 try:
-                    swap_data = await ews.wait_swap(name_service, ws)
+                    swap_data = await ews.SwapData.wait(ws, swap.chain)
                     if swap_data is not None:
-                        text_msg = swap.buy_sell_msg(swap_data, get_usd_price(swap_data, swap, oracle))
+                        text_msg = swap.buy_sell_msg(swap_data, oracle.get())
                         log.log(text_msg)
                         await DSCRD_CHANS.ipdoe_swaps.send(to_embed(text_msg))
                         ll_event.reset()

@@ -1,5 +1,6 @@
 from w3f.lib.contracts import kdoe_eth_abi
 from w3f.lib.contracts import kdoe_bsc_token_abi
+from w3f.lib.eth_event_socket import Chain
 from w3f.lib import swap
 from collections import namedtuple
 from web3 import Web3
@@ -13,8 +14,10 @@ BNB_KDOE_T = [swap.SwapToken('kdoe', 'ether', decimals=2),
               swap.SwapToken('bnb', 'ether', decimals=4)]
 ABI = kdoe_eth_abi.get_abi()
 BSC_ABI = kdoe_bsc_token_abi.get_abi()
-BNB_SWAP = swap.Swap(BSC_ABI, f"bnb-kdoe_bsc", BSC_ADDRESS, BNB_KDOE_T, 0, '🟡')
-ETH_SWAP = swap.Swap(ABI, "eth-kdoe", ADDRESS, ETH_KDOE_T, 0)
+BNB_SWAP = swap.Swap(BSC_ABI, "bnb-kdoe_bsc", BSC_ADDRESS, BNB_KDOE_T,
+                     0, Chain.BSC, '🟡')
+ETH_SWAP = swap.Swap(ABI, "eth-kdoe", ADDRESS, ETH_KDOE_T,
+                     0, Chain.ETH, '🧩')
 
 
 EthReserves = namedtuple("Reserves", ["kdoe", "eth", "block"])
