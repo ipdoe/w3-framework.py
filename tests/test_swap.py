@@ -11,7 +11,6 @@ def test__Swap__Sell():
 
         assert not kdoe_eth.ETH_SWAP.is_buy(swap)
         assert '🔴🔴' in kdoe_eth.ETH_SWAP.buy_sell_msg(swap, 10)
-        print(kdoe_eth.ETH_SWAP.buy_sell_msg(swap, 10))
 
 def test__Swap__Buy():
     with (TEST_DATA / "swap_log_event_buy.json").open() as f:
@@ -19,4 +18,3 @@ def test__Swap__Buy():
 
         assert kdoe_eth.ETH_SWAP.is_buy(swap)
         assert '🧩🧩' in kdoe_eth.ETH_SWAP.buy_sell_msg(swap, 10)
-        print(kdoe_eth.ETH_SWAP.buy_sell_msg(swap, 10))
