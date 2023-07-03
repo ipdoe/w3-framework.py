@@ -1,5 +1,33 @@
 
+import pathlib
 from web3 import Web3
+from web3._utils.filters import construct_event_topic_set
+from web3._utils.encoding import Web3JsonEncoder
+from web3.contract.contract import ContractEvent
+import web3.contract
+import web3.types
+import json
+from eth_typing import HexStr
+from hexbytes import HexBytes
+
+def j_dumps(dictionary, indent=2):
+    class my_jenc(Web3JsonEncoder):
+        def default(self, obj):
+            if isinstance(obj, bytes):
+                return HexStr(HexBytes(obj).hex())
+            return Web3JsonEncoder.default(self, obj)
+    return json.dumps(dictionary, indent=indent, cls=my_jenc)
+
+def j_dump_file(path: pathlib.Path, dictionary, indent=2):
+    with open(path, 'w') as f:
+        f.write(j_dumps(dictionary, indent))
+
+    class my_jenc(Web3JsonEncoder):
+        def default(self, obj):
+            if isinstance(obj, bytes):
+                return HexStr(HexBytes(obj).hex())
+            return Web3JsonEncoder.default(self, obj)
+    return json.dumps(dictionary, indent=indent, cls=my_jenc)
 
 class W3:
     def __init__(self, http_provider: str, ws: str = None) -> None:
@@ -23,6 +51,32 @@ class W3:
         average_block = average_time / self.get_avg_block_time()
 
         return int(self.w3.eth.block_number - average_block)
+
+class Contract():
+    def __init__(self, w3: Web3, address, abi) -> None:
+        self.w3 = w3
+        self.contract = w3.eth.contract(address=address, abi=abi)
+
+    def get_event_signature(self, name: str):
+        for event in self.contract.events._events:
+            if event["name"] == name:
+                return self._get_event_signature(event)
+        return None
+
+    def _get_event_signature(self, event: web3.types.ABIEvent):
+        return construct_event_topic_set(event, self.w3.codec)[0]
+
+    def get_abi_event_by_signature(self, hash: str):
+        for event in self.contract.events._events:
+            if self._get_event_signature(event) == hash:
+                return self.contract.events[event["name"]]
+        return None
+
+    def decode_event(self, name, log_data):
+        return self.contract.events[name]().process_log(log_data)
+
+    # decode event data
+    # contract.events.OrderFulfilled().process_log(logs[0])
 
 class InfuraEth(W3):
     def __init__(self, api_key: str) -> None:

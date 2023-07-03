@@ -1,8 +1,12 @@
 from web3 import Web3
-import w3f.lib.contracts.doe_nft_abi as doe_nft_abi
+import w3f.lib.contracts.doe_nft_abi as abi
+import w3f.lib.web3 as web3
 
 ADDRESS = "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7"
 
-def wallet_inventory(w3, wallet):
-    contract = w3.eth.contract(address=ADDRESS, abi=doe_nft_abi.get_abi())
-    return contract.functions.walletInventory(wallet).call()
+class DoeNtf(web3.Contract):
+    def __init__(self, w3: Web3) -> None:
+        super().__init__(w3, ADDRESS, abi.get_abi())
+
+    def wallet_inventory(self, wallet):
+        return self.contract.functions.walletInventory(wallet).call()

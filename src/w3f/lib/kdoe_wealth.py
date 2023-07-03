@@ -80,7 +80,7 @@ def get_mainet_kdoe(w3, wallet):
 
 def get_doe_nfts(w3, wallet):
     staking = kdoe_rewards.address_to_token(w3, wallet)
-    mainnet = doe_nft_contract.wallet_inventory(w3, wallet)
+    mainnet = doe_nft_contract.DoeNtf(w3).wallet_inventory(wallet)
     return staking + mainnet
 
 def get_kdoe_price_usd(w3, eth_price):
