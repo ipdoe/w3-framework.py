@@ -73,7 +73,7 @@ async def on_ready():
 
 async def ws_event_loop(w3: W3, swap: SWAP.Swap, oracle):
     log.log(f"asyncio.create_task(ws_event_loop({swap.name}))")
-    print(f"Connected to Web3: {w3.w3.isConnected()}")
+    print(f"Connected to Web3: {w3.w3.is_connected()}")
     async for ws in websockets.connect(w3.ws):
         try:
             subscription = await ews.SwapData.subscribe(ws, swap.address)

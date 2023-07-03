@@ -47,7 +47,7 @@ class SwapData:
     def __init__(self, event_response: dict, chain = Chain.ETH):
         self.chain = chain
         self.ammounts = self._decode_to_in_out_tokens(event_response['data'])
-        self.addr = Web3.toChecksumAddress(hex(int(event_response['topics'][2], 16)))
+        self.addr = Web3.to_checksum_address(hex(int(event_response['topics'][2], 16)))
         self.addr_link = f"[{self.addr[:8]}]({EXPLORER[self.chain].format(f'address/{self.addr}')})"
         self.tx = event_response['transactionHash']
         self.tx_link = f"[{self.tx[:8]}]({EXPLORER[self.chain].format(f'tx/{self.tx}')})"

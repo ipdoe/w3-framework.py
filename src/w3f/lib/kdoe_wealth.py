@@ -22,7 +22,7 @@ class Wealth():
                  collection_stats: doe_nft_data.CollectionStats = None):
         self.w3 = w3
         self.w3_bsc = w3_bsc
-        self.wallet = Web3.toChecksumAddress(wallet)
+        self.wallet = Web3.to_checksum_address(wallet)
         self._metadata = metadata
         self._collection_stats = collection_stats
         self.mainnet = get_mainet_kdoe(self.w3, self.wallet)
@@ -80,7 +80,7 @@ def get_mainet_kdoe(w3, wallet):
 
 def get_doe_nfts(w3, wallet):
     staking = kdoe_rewards.address_to_token(w3, wallet)
-    mainnet = doe_nft_contract.wallet_inventory(w3, wallet)
+    mainnet = doe_nft_contract.DoeNtf(w3).wallet_inventory(wallet)
     return staking + mainnet
 
 def get_kdoe_price_usd(w3, eth_price):

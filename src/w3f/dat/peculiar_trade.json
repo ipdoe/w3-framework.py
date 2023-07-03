@@ -1,0 +1,118 @@
+[
+  {
+    "args": {
+      "offerer": "0x577fc12337081077D199bac075Aca6c26A9F4121",
+      "zone": "0x004C00500000aD104D7DBd00e3ae0A5C00560C00",
+      "orderHash": "0x675be626af20814b9171a1b977ba88ad196ccd0f62fd178ab7bbbee86e1e2108",
+      "recipient": "0x22cCdE71e3e2D4C1B27120B6B006bF4Cea6Cc36F",
+      "offer": [
+        {
+          "itemType": 1,
+          "token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+          "identifier": 0,
+          "amount": 2000000000000000000
+        }
+      ],
+      "consideration": [
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 1070,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 8989,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 8526,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 9122,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 9123,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 8540,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 1359,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 6480,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 7373,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 1266,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 8377,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 2,
+          "token": "0xD8CDB4b17a741DC7c6A57A650974CD2Eba544Ff7",
+          "identifier": 3563,
+          "amount": 1,
+          "recipient": "0x577fc12337081077D199bac075Aca6c26A9F4121"
+        },
+        {
+          "itemType": 1,
+          "token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+          "identifier": 0,
+          "amount": 50000000000000000,
+          "recipient": "0x0000a26b00c1F0DF003000390027140000fAa719"
+        }
+      ]
+    },
+    "event": "OrderFulfilled",
+    "logIndex": 260,
+    "transactionIndex": 86,
+    "transactionHash": "0x239922f99296ca61fc40f7de2457a93c9ff7129221fa79416c1a040a109456eb",
+    "address": "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+    "blockHash": "0x1293ee4a592664bd51cc93298d321f645b543a667e5eb7df7ebd069e0a7c0422",
+    "blockNumber": 17032906
+  }
+]

@@ -2,7 +2,6 @@ import pytest
 
 from w3f.lib import doe_nft_data
 
-COLLECTION_STATS = doe_nft_data.get_collection_stats()
 METADATA = doe_nft_data.Metadata()
 
 def test__Metadata__get_rarity():
@@ -21,12 +20,14 @@ def test__Metadata__get_twin():
     assert METADATA.get_twin(1342) != 0
 
 def test__get_estimated_price__ok():
+    COLLECTION_STATS = doe_nft_data.get_collection_stats()
     assert doe_nft_data.get_estimated_price(2156, doe_nft_data.Metadata(), COLLECTION_STATS, 0.5)
 
 def test__get_last_sale_prices__ok():
     assert doe_nft_data.get_last_sale_prices([2156])
 
 def test__get_collection_stats__ok():
+    COLLECTION_STATS = doe_nft_data.get_collection_stats()
     assert COLLECTION_STATS.floor_price
 
 def test__get_rarity_bonus__ok():

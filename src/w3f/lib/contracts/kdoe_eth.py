@@ -25,10 +25,10 @@ BnbReserves = namedtuple("Reserves", ["kdoe", "bnb", "block"])
 def get_reserves(w3, address=ADDRESS, abi=ABI):
     contract = w3.eth.contract(address=address, abi=abi)
     reserves = contract.functions.getReserves().call()
-    Web3.fromWei(reserves[0], "ether")
+    Web3.from_wei(reserves[0], "ether")
     if address == BSC_ADDRESS:
-        return BnbReserves(Web3.fromWei(reserves[0], "ether"), Web3.fromWei(reserves[1], "ether"), reserves[2])
-    return EthReserves(Web3.fromWei(reserves[0], "ether"), Web3.fromWei(reserves[1], "ether"), reserves[2])
+        return BnbReserves(Web3.from_wei(reserves[0], "ether"), Web3.from_wei(reserves[1], "ether"), reserves[2])
+    return EthReserves(Web3.from_wei(reserves[0], "ether"), Web3.from_wei(reserves[1], "ether"), reserves[2])
 
 def get_kdoe_price(w3, address=ADDRESS, abi=ABI):
     reserves = get_reserves(w3, address, abi)

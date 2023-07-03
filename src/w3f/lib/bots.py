@@ -59,13 +59,13 @@ class Services:
     def __init__(self) -> None:
         self.w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
         self.w3_bsc = web3.GetBlockBsc(hd.GETBLOCK_KEY)
-        self.ens = ENS.fromWeb3(self.w3)
+        self.ens = ENS.from_web3(self.w3)
         self.nft_metadata = doe_nft_data.Metadata()
         self.oracle = crypto_oracle.DoeNftOracle()
 
     def to_address(self, wallet: str):
         try:
-            return Web3.toChecksumAddress(wallet)
+            return Web3.to_checksum_address(wallet)
         except Exception:
             return self.ens.address(wallet)
 

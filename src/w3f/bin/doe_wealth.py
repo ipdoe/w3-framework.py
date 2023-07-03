@@ -22,8 +22,8 @@ def main():
     log.log_version()
     w3 = Web3(Web3.HTTPProvider(hidden_details.eth_mainnet))
     w3_arb = Web3(Web3.HTTPProvider(hidden_details.arbirum_mainnet))
-    print(f"Connected to Web3: {w3.isConnected()}")
-    print(f"Connected to Web3: {w3_arb.isConnected()}")
+    print(f"Connected to Web3: {w3.is_connected()}")
+    print(f"Connected to Web3: {w3_arb.is_connected()}")
     cnt = 0
     with open('src/w3f/dat/holders_staking_single_line_20221203.json', 'r') as f:
         data = json.load(f)

@@ -7,7 +7,7 @@ from web3 import Web3
 
 def main():
     w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
-    print(f"Connected to Web3: {w3.isConnected()}")
+    print(f"Connected to Web3: {w3.is_connected()}")
     current_block = w3.eth.block_number
     stakers_list = doe_doe_staking_contract.dump_all_stakers(hd.etherscan_key)
     balances = doe_doe_staking_contract.get_sorted_balances(w3, stakers_list, block_identifier=current_block)

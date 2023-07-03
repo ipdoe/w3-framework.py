@@ -13,4 +13,4 @@ def get_bsc_balance(w3, wallet):
 def _get_balance(w3, addr, wallet):
     contract = w3.eth.contract(address=addr, abi=kdoe_token_abi.get_abi())
     balanceOf = contract.functions.balanceOf(wallet).call()
-    return Web3.fromWei(balanceOf, 'ether')
+    return Web3.from_wei(balanceOf, 'ether')

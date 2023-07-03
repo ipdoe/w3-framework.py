@@ -11,7 +11,7 @@ class SwapToken:
         self.ammount = 0.0
 
     def set_ammount(self, amount: decimal.Decimal):
-        self.ammount = float(Web3.fromWei(amount, self.unit))
+        self.ammount = float(Web3.from_wei(amount, self.unit))
         return self
 
     def to_string(self):

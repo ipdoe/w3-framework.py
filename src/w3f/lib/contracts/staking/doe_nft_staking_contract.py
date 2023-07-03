@@ -11,10 +11,10 @@ def get_data(w3, wallet):
     contract = w3.eth.contract(address=address, abi=doe_nft_abi.get_abi())
     totalSupply = contract.functions.totalSupply().call()
     userRewardPerTokenPaid = contract.functions.userRewards(wallet).call()[0]
-    earned = Web3.fromWei(contract.functions.earned(wallet).call(), "ether")
+    earned = Web3.from_wei(contract.functions.earned(wallet).call(), "ether")
     rewardPerToken = contract.functions.rewardPerToken().call()
     getTokensOf = contract.functions.getTokensOf(wallet).call()
-    
+
     return {
         "rewardRate": 102341260021419944000000000000000000, # = 102341260021419944*1e18
         "totalSupply": totalSupply,

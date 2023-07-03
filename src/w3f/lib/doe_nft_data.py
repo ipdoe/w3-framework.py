@@ -2,8 +2,10 @@ from web3 import Web3
 import requests, json, os, pathlib
 from collections import namedtuple
 from typing import List
+from w3f.lib.logger import to_json_str
+import w3f.hidden_details as hd
 
-_HEADERS = {'User-Agent': 'Mozilla/5.0'}
+_HEADERS = {'User-Agent': 'Mozilla/5.0', "X-API-KEY": hd.op_sea_key}
 _DAT_PATH = pathlib.Path("src/w3f/dat")
 OP_SEA_URL = "https://api.opensea.io/api/v1"
 
@@ -81,7 +83,7 @@ def get_last_sale_prices(ids: List):
             last_sale = {}
             try:
                 last_sale['token'] = asset['last_sale']['payment_token']['symbol']
-                last_sale['price'] = float(Web3.fromWei(int(asset['last_sale']['total_price']), 'ether'))
+                last_sale['price'] = float(Web3.from_wei(int(asset['last_sale']['total_price']), 'ether'))
                 last_sale['eth_now'] = last_sale['price'] * float(asset['last_sale']['payment_token']['eth_price'])
                 last_sale['usd_now'] = last_sale['price'] * float(asset['last_sale']['payment_token']['usd_price'])
             except:

@@ -11,8 +11,8 @@ StakingBalance = namedtuple("StakingBalance", ["staked", "rewards"])
 
 def get_balance(w3: Web3, wallet, block_identifier='latest'):
     contract = w3.eth.contract(address=contract_address, abi=kdoe_rewards_abi.get_abi())
-    balanceOf =  Web3.fromWei(contract.functions.balanceOf(wallet).call(block_identifier=block_identifier), "ether")
-    earned = Web3.fromWei(contract.functions.earned(wallet).call(block_identifier=block_identifier), "ether")
+    balanceOf =  Web3.from_wei(contract.functions.balanceOf(wallet).call(block_identifier=block_identifier), "ether")
+    earned = Web3.from_wei(contract.functions.earned(wallet).call(block_identifier=block_identifier), "ether")
     return StakingBalance(balanceOf, earned)
 
 def address_to_token(w3: Web3, wallet, block_identifier='latest'):
@@ -39,7 +39,7 @@ def dump_all_stakers_since(api_key, start_block):
     addresses = []
     dump = all_doe_stake_transactions_since(api_key, start_block)
     for tx in dump:
-        addr = Web3.toChecksumAddress(tx['from'])
+        addr = Web3.to_checksum_address(tx['from'])
         if addr not in addresses:
             addresses.append(addr)
 
