@@ -3,6 +3,7 @@ import requests, json, os, pathlib
 from collections import namedtuple
 from typing import List
 from w3f.lib.logger import to_json_str
+from w3f.lib.contracts.doe_nft_contract import ADDRESS
 import w3f.hidden_details as hd
 
 _HEADERS = {'User-Agent': 'Mozilla/5.0', "X-API-KEY": hd.op_sea_key}
@@ -67,7 +68,7 @@ def get_estimated_price(id, metadata: Metadata, stats: CollectionStats, last_sal
 
 
 def get_last_sale_prices(ids: List):
-    contract = "0xd8cdb4b17a741dc7c6a57a650974cd2eba544ff7"
+    contract = ADDRESS
     max_chunk = 20
 
     last_sales = {}
