@@ -66,6 +66,7 @@ class ItemBase(EventBase):
         self.maker = self.payload['payload']['maker']['address']
         self.os_link = self.payload['payload']['item']['permalink']
         self.nft_id = self.payload['payload']['item']['nft_id'].split('/')[-1]
+        self.image_url = self.payload['payload']['item']['metadata']['image_url']
         self.token = PaymentToken(self.payload['payload']['payment_token'])
         self.value = 0
         self.value_type = 'Price'
