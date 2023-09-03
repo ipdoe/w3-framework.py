@@ -1,9 +1,12 @@
 import pathlib
 from w3f import ROOT_PATH
 from w3f.lib.util import dump_json, load_json
-from open_rarity import Collection, Token, RarityRanker, TokenMetadata, StringAttribute
-from open_rarity.models.token_identifier import EVMContractTokenIdentifier
-from open_rarity.models.token_standard import TokenStandard
+try:
+    from open_rarity import Collection, Token, RarityRanker, TokenMetadata, StringAttribute
+    from open_rarity.models.token_identifier import EVMContractTokenIdentifier
+    from open_rarity.models.token_standard import TokenStandard
+except:
+    pass
 
 class Metadata:
     NAME = ""
