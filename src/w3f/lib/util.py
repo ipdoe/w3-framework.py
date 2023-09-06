@@ -11,3 +11,9 @@ def dump_json(target: Path, data: dict, indent=None):
 def load_json(path: Path):
     with open(path, 'r') as f:
         return json.load(f)
+
+def to_json_str(d: dict):
+    try:
+        return json.dumps(d, indent=2)
+    except:
+        return ""

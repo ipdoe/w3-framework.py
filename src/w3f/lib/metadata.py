@@ -88,7 +88,7 @@ class Metadata:
 
     @classmethod
     def _append_attributes(cls, id: str, item_metadata: dict, all_attributes: dict):
-        asset_attributes: list = item_metadata[id]["attributes"]
+        asset_attributes: list = item_metadata["attributes"]
         asset_attributes.append({"trait_type": "trait_count", "value": cls._attr_count(asset_attributes)})
 
         for trait in asset_attributes:
@@ -162,6 +162,11 @@ class Metadata:
     @classmethod
     def _dump_nft_types(cls, types):
         dump_json(cls._nft_types(), types)
+
+    @classmethod
+    def dump_attributes_histogram(cls):
+        _, _, attr_hist = cls.generate_metadata_from_raw()
+        dump_json(cls._attributes_hist(), attr_hist, indent=2)
 
     @classmethod
     def redump(cls):
