@@ -33,13 +33,14 @@ class Swap:
         self._sell_char = '🔴'
 
     @staticmethod
-    def _green_red(char, usd_val):
-        return char * max(1, len(str(int(usd_val))))
+    def _green_red(char, usd_val, divisor):
+        return char * (int(usd_val) // divisor + 1)
+        # return char * max(1, len(str(int(usd_val))))
 
     def is_buy(self, swap_data: eth_event_socket.SwapData):
         return swap_data.ammounts.out_idx == self._buy_idx
 
-    def buy_sell_msg(self, swap_data: eth_event_socket.SwapData, oracle_usd_price):
+    def buy_sell_msg(self, swap_data: eth_event_socket.SwapData, oracle_usd_price, divisor = 100):
         # SELL
         in_token = self._buy_token.set_ammount(swap_data.ammounts.in_a)
         out_token = self._sell_token.set_ammount(swap_data.ammounts.out_a)
@@ -56,7 +57,7 @@ class Swap:
         usd_msg = f" (${usd_val:,.2f})" if usd_val > 0.0 else ""
         price_msg = f"Price: ${token_price_usd:f}\n" if token_price_usd > 0.0 else ""
 
-        return f"{Swap._green_red(swap_char, usd_val)}\n" \
+        return f"{Swap._green_red(swap_char, usd_val, divisor)}\n" \
                f"In: {in_token.to_string()}{usd_msg}\n" \
                f"Out: {out_token.to_string()}\n" \
                f"{price_msg}" \
