@@ -34,7 +34,7 @@ class Swap:
 
     @staticmethod
     def _green_red(char, usd_val, divisor):
-        return char * (int(usd_val) // divisor + 1)
+        return char * max(1, min(int(usd_val) // divisor, 1000))
         # return char * max(1, len(str(int(usd_val))))
 
     def is_buy(self, swap_data: eth_event_socket.SwapData):
