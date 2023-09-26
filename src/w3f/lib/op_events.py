@@ -1,5 +1,6 @@
 import requests, pathlib
 from datetime import datetime, timedelta, timezone
+from w3f.lib.opensea import OpenseaApi
 from w3f.lib.util import to_json_str, dump_json
 
 EVENTS=['item_metadata_updated', 'item_listed', 'item_sold', 'item_transferred',
@@ -68,7 +69,7 @@ class EventBase:
         dump_json(path, self._dict, indent=indent)
 
 class ItemBase(EventBase):
-    def __init__(self, _dict: dict, eth_price_usd: float) -> None:
+    def __init__(self, _dict: dict, eth_price_usd: float, os_api_key: str) -> None:
         EventBase.__init__(self, _dict, eth_price_usd)
         self.maker = self.payload['payload']['maker']['address']
         self.os_link = self.payload['payload']['item']['permalink']
@@ -77,6 +78,7 @@ class ItemBase(EventBase):
         self.token = PaymentToken(self.payload['payload']['payment_token'])
         self.value = 0
         self.value_type = 'Price'
+        self.os_api_key = OpenseaApi(os_api_key)
 
 
     def eth_value(self) -> float:
@@ -95,7 +97,7 @@ class ItemBase(EventBase):
         return f'[{text}]({self.os_link})'
 
     def maker_taker(self):
-        return self.os_md_link(f'From: {get_os_username(self.maker)}')
+        return self.os_md_link(f'From: {self.os_api_key.get_username(self.maker)}')
 
     def announcement(self):
         return f'{self.title} {self.nft_id}'
@@ -112,8 +114,8 @@ class ItemBase(EventBase):
             f'{self.maker_taker()}'
 
 class ItemListed(ItemBase):
-    def __init__(self, _dict: dict, eth_price_usd: float) -> None:
-        ItemBase.__init__(self, _dict, eth_price_usd)
+    def __init__(self, _dict: dict, eth_price_usd: float, os_api_key: str) -> None:
+        ItemBase.__init__(self, _dict, eth_price_usd, os_api_key)
         self.title = 'Listing'
         self.value = int(self.payload['payload']['base_price'])
 
@@ -121,14 +123,14 @@ class ItemListed(ItemBase):
         return f'📰📰 {self.title} {self.nft_id} 📰📰'
 
 class ItemReceivedOffer(ItemListed):
-    def __init__(self, _dict: dict, eth_price_usd: float) -> None:
-        ItemListed.__init__(self, _dict, eth_price_usd)
+    def __init__(self, _dict: dict, eth_price_usd: float, os_api_key: str) -> None:
+        ItemListed.__init__(self, _dict, eth_price_usd, os_api_key)
         self.title = 'New Offer'
         self.value_type = 'Offer'
 
 class ItemReceivedBid(ItemListed):
-    def __init__(self, _dict: dict, eth_price_usd: float) -> None:
-        ItemListed.__init__(self, _dict, eth_price_usd)
+    def __init__(self, _dict: dict, eth_price_usd: float, os_api_key: str) -> None:
+        ItemListed.__init__(self, _dict, eth_price_usd, os_api_key)
         self.title = 'New Bid'
         self.value_type = 'Bid'
 
@@ -136,8 +138,8 @@ class ItemReceivedBid(ItemListed):
         return f'🔨🔨 {self.title} {self.nft_id} 🔨🔨'
 
 class ItemSold(ItemBase):
-    def __init__(self, _dict: dict, eth_price_usd: float) -> None:
-        ItemBase.__init__(self, _dict, eth_price_usd)
+    def __init__(self, _dict: dict, eth_price_usd: float, os_api_key: str) -> None:
+        ItemBase.__init__(self, _dict, eth_price_usd, os_api_key)
         self.title = 'Sale'
         self.value = int(self.payload['payload']['sale_price'])
         self.taker = self.payload['payload']['taker']['address']
@@ -150,30 +152,19 @@ class ItemSold(ItemBase):
         return f'[{short_hex(self.transaction)}](https://etherscan.io/tx/{self.transaction})'
 
     def taker_md_link(self):
-        return self.os_md_link(f'To: {get_os_username(self.taker)}')
+        return self.os_md_link(f'To: {self.os_api_key.get_username(self.taker)}')
 
     def maker_taker(self):
         return f'{ItemBase.maker_taker(self)}\n{self.taker_md_link()}'
 
-def create_event(event: dict, eth_price_usd: float):
+def create_event(event: dict, eth_price_usd: float, os_api_key: str):
     if event['event'] == 'item_listed':
-        return ItemListed(event, eth_price_usd)
+        return ItemListed(event, eth_price_usd, os_api_key)
     elif event['event'] == 'item_sold':
-        return ItemSold(event, eth_price_usd)
+        return ItemSold(event, eth_price_usd, os_api_key)
     elif event['event'] ==  'item_received_offer':
-        return ItemReceivedOffer(event, eth_price_usd)
+        return ItemReceivedOffer(event, eth_price_usd, os_api_key)
     elif event['event'] ==  'item_received_bid':
-        return ItemReceivedBid(event, eth_price_usd)
+        return ItemReceivedBid(event, eth_price_usd, os_api_key)
     else:
         return EventBase(event, eth_price_usd)
-
-def get_os_username(addr: str):
-    try:
-        user_agent = {'User-agent': 'Mozilla/5.0'}
-        account = requests.get(f'https://api.opensea.io/api/v1/user/{addr}',
-            headers=user_agent).json()
-        if account['username'] is None:
-            return short_hex(account['account']['address'])
-        return account['username']
-    except:
-        return short_hex(addr)

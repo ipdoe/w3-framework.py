@@ -17,3 +17,6 @@ def to_json_str(d: dict):
         return json.dumps(d, indent=2)
     except:
         return ""
+
+def short_hex(hex: str, chars=8):
+    return hex[0:chars]

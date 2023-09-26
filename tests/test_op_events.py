@@ -59,9 +59,6 @@ def test__create_event():
         event = op_events.create_event(json.load(f), eth_price)
         assert type(event) is op_events.ItemSold
 
-def test__get_os_username():
-    assert op_events.get_os_username("0x5dA93cF2d5595Dd68Daed256DFbFF62c7ebBB298")
-
 def test__Timestamp__Ctor():
     ts = op_events.Timestamp.make("2023-04-07T05:28:41.995495+00:00")
     assert ts
