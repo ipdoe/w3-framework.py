@@ -13,7 +13,6 @@ class OpenseaApi:
     def get_username(self, addr):
         try:
             account = self.user(addr)
-            print(account)
             if account['username'] is None:
                 return short_hex(account['account']['address'])
             return account['username']

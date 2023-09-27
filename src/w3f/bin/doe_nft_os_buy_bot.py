@@ -88,7 +88,7 @@ async def ws_loop():
             log.log("Connection OK")
             await subscribe(ws)
             while True:
-                os_event = osea.create_event(json.loads(await ws.recv()), ORACLE.get())
+                os_event = osea.create_event(json.loads(await ws.recv()), ORACLE.get(), hd.op_sea_key)
                 nft_event_q.put_nowait(os_event)
         except websockets.ConnectionClosed as cc:
             log.log(f'ConnectionClosed: {cc}')
