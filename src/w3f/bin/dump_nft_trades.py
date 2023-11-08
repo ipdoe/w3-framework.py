@@ -1,10 +1,12 @@
-from w3f.lib.contracts import doe_nft_contract
+from w3f.lib.contracts import doe_nft_contract, mongs_nft
 from w3f.lib.contracts.opensea import seaport_1p5
 from w3f.lib.web3 import  j_dump_file, j_dumps
 import w3f.lib.web3 as web3
 from w3f import ROOT_PATH
-from w3f.lib.util import load_json
+from w3f.lib.util import web3_pretty_json
 from web3.types import FilterParams
+from web3 import Web3
+import json
 
 import w3f.hidden_details as hd
 
@@ -58,17 +60,24 @@ d = seaport_1p5.OrderFulfilledEvent({
 w3 = web3.InfuraEth(hd.infura_key).w3
 print(f"Connected to Web3: {w3.is_connected()}")
 
-
-
 # Contracts
-DOE_NFT = doe_nft_contract.DoeNtf(w3)
-SEAPORT = seaport_1p5.Seaport(w3)
+# DOE_NFT = doe_nft_contract.DoeNtf(w3)
+# # SEAPORT = seaport_1p5.Seaport(w3)
+# block = 17553138
+# all_nfts = DOE_NFT.get_nfts_from_transfer_logs(address="0x5da93cf2d5595dd68daed256dfbff62c7ebbb298")
+# print(all_nfts)
+
+contract = mongs_nft.Contract(w3)
+all_nfts = contract.get_nfts("0x5da93cf2d5595dd68daed256dfbff62c7ebbb298")
+print(all_nfts)
+exit()
+
 peculiar_trade = "0x239922f99296ca61fc40f7de2457a93c9ff7129221fa79416c1a040a109456eb"
 receipt = w3.eth.get_transaction_receipt(peculiar_trade)
 logs = SEAPORT.contract.events.OrderFulfilled().process_receipt(receipt)
 print(j_dump_file(ROOT_PATH / "dat/peculiar_trade.json", logs, indent=2))
 
-exit(0)
+# exit(0)
 
 # Filters
 block = 17553138
@@ -82,11 +91,11 @@ print(j_dumps(seaport_logs))
 #     "address": [seaport_1p5.ADDRESS],
 #     "topics": [SEAPORT.get_event_signature("OrderFulfilled")]}).get_all_entries()
 
-# doe_logs = DOE_NFT.contract.events.Transfer.create_filter(
-#     fromBlock=block,
-#     toBlock=block
-#     # , topics=[DOE_NFT.get_event_signature("Transfer")]
-#     ).get_all_entries()
+received = DOE_NFT.contract.events.Transfer.create_filter(
+    fromBlock=block,
+    toBlock=block
+    # , topics=[DOE_NFT.get_event_signature("Transfer")]
+    ).get_all_entries()
 
 # doe_logs = DOE_NFT.contract.events["Transfer"].create_filter(
 #     fromBlock=block,

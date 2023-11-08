@@ -4,9 +4,9 @@ from w3f.lib import doe_nft_data
 
 class OracaleBase:
     def __init__(self) -> None:
-        self.latest = None
+        self.latest: float = None
 
-    def get(self):
+    def get(self) -> float:
         return self.latest
 
     def _fetch(self):

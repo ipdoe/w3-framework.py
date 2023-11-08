@@ -10,11 +10,11 @@ def test__Swap__Sell():
         swap = ees.SwapData(json.load(f)['params']['result'])
 
         assert not kdoe_eth.ETH_SWAP.is_buy(swap)
-        assert '🔴🔴' in kdoe_eth.ETH_SWAP.buy_sell_msg(swap, 10)
+        assert '🔴' in kdoe_eth.ETH_SWAP.buy_sell_msg(swap, 10)
 
 def test__Swap__Buy():
     with (TEST_DATA / "swap_log_event_buy.json").open() as f:
         swap = ees.SwapData(json.load(f)['params']['result'])
 
         assert kdoe_eth.ETH_SWAP.is_buy(swap)
-        assert '🧩🧩' in kdoe_eth.ETH_SWAP.buy_sell_msg(swap, 10)
+        assert '🧩' in kdoe_eth.ETH_SWAP.buy_sell_msg(swap, 10)

@@ -2,4 +2,4 @@ from w3f.lib import bots
 
 services = bots.Services()
 
-print(services.get_wealth("0x0DF9dF231Ab1457fB3c259E13ae5408931BcbE2c").to_str())
+print(services.get_wealth("0x5dA93cF2d5595Dd68Daed256DFbFF62c7ebBB298").to_str())

@@ -2,9 +2,9 @@ import w3f.lib.logger as log
 
 from w3f.lib.contracts.staking import kdoe_rewards
 from w3f.lib.contracts import kdoe_token
-from w3f.lib.contracts import doe_nft_contract
+from w3f.lib.contracts import doe_nft_contract, mongs_nft
 from w3f.lib.contracts import kdoe_eth
-from w3f.lib import doe_nft_data
+from w3f.lib import doe_nft_data, mong_metadata
 
 from collections import namedtuple
 from web3 import Web3
@@ -19,11 +19,12 @@ class MainnetKdoe(namedtuple("MainnetKdoe", ["mainnet", "staking"])):
 
 class Wealth():
     def __init__(self, w3, w3_bsc, wallet, metadata: doe_nft_data.Metadata = None,
-                 collection_stats: doe_nft_data.CollectionStats = None):
+                 mong_metadata: mong_metadata.MongMetadata = None, collection_stats: doe_nft_data.CollectionStats = None):
         self.w3 = w3
         self.w3_bsc = w3_bsc
         self.wallet = Web3.to_checksum_address(wallet)
         self._metadata = metadata
+        self._mong_metadata = mong_metadata
         self._collection_stats = collection_stats
         self.mainnet = get_mainet_kdoe(self.w3, self.wallet)
         self.nfts = get_nft_holdings_stats(self.w3, self.wallet, metadata, collection_stats)
@@ -36,6 +37,10 @@ class Wealth():
         result = []
         for nft in self.nfts["nfts"]:
             result.append(f"#{nft:>4} {self.nfts['nfts'][nft].to_str()}\n")
+
+        for mong_id in self.nfts["mong"]:
+            mong_id =  mong_id - self._mong_metadata._ID_OFFSET  # TODO: fix the id in the metadata
+            result.append(f"mong: #{mong_id} [{self._mong_metadata.get_rarity(mong_id): >4}]\n")
 
         if result:
             result[-1] = result[-1][:-1]
@@ -80,8 +85,12 @@ def get_mainet_kdoe(w3, wallet):
 
 def get_doe_nfts(w3, wallet):
     staking = kdoe_rewards.address_to_token(w3, wallet)
-    mainnet = doe_nft_contract.DoeNtf(w3).wallet_inventory(wallet)
+    mainnet = doe_nft_contract.Contract(w3).wallet_inventory(wallet)
     return staking + mainnet
+
+def get_mong_nfts(w3, wallet):
+    mainnet = mongs_nft.Contract(w3).get_nfts(wallet)
+    return mainnet
 
 def get_kdoe_price_usd(w3, eth_price):
     return float(kdoe_eth.get_kdoe_price(w3)) * eth_price
@@ -95,6 +104,7 @@ def get_nft_holdings_stats(w3, wallet, metadata: doe_nft_data.Metadata = None, c
     sale_prices = doe_nft_data.get_last_sale_prices(nfts)
     holdings = {"nft_total": 0}
     holdings["nft_cnt"] = len(nfts)
+    holdings["mong"] = get_mong_nfts(w3, wallet)
     holdings["nfts"] = {}
     for nft in nfts:
         holdings["nfts"][nft] = doe_nft_data.get_estimated_price(nft, metadata, collection_stats, sale_prices[nft]["eth_now"])
