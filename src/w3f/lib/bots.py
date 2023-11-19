@@ -222,7 +222,8 @@ class DscrdChannel:
             except Exception as e:
                 log.log(f'Failed to send embed to discord {self.chan}: {e}')
                 return False
-        return True
+            return True
+        return False
 
     async def send_and_log(self, message):
         if await self.send(log.slog_parent(message)):

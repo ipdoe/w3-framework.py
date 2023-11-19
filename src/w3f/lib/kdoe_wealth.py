@@ -11,15 +11,15 @@ from web3 import Web3
 
 
 class MainnetKdoe(namedtuple("MainnetKdoe", ["mainnet", "staking"])):
-    def __new__(self, field1, field2):
-        return super().__new__(self, field1, field2)
+    def __new__(cls, field1, field2):
+        return super().__new__(cls, field1, field2)
 
     def total(self):
         return self.mainnet + sum(self.staking)
 
 class Wealth():
-    def __init__(self, w3, w3_bsc, wallet, metadata: doe_nft_data.Metadata = None,
-                 mong_metadata: mong_metadata.MongMetadata = None, collection_stats: doe_nft_data.CollectionStats = None):
+    def __init__(self, w3, w3_bsc, wallet, metadata: doe_nft_data.Metadata,
+                 mong_metadata: mong_metadata.MongMetadata, collection_stats: doe_nft_data.CollectionStats = None):
         self.w3 = w3
         self.w3_bsc = w3_bsc
         self.wallet = Web3.to_checksum_address(wallet)
@@ -31,7 +31,7 @@ class Wealth():
         self.bsc = kdoe_token.get_bsc_balance(self.w3_bsc, self.wallet)
 
     def total(self):
-        return self.mainnet + sum(self.staking)
+        return self.mainnet.mainnet + sum(self.mainnet.staking)
 
     def _nfts_to_lines(self):
         result = []
@@ -39,8 +39,8 @@ class Wealth():
             result.append(f"#{nft:>4} {self.nfts['nfts'][nft].to_str()}\n")
 
         for mong_id in self.nfts["mong"]:
-            mong_id =  mong_id - self._mong_metadata._ID_OFFSET  # TODO: fix the id in the metadata
-            result.append(f"mong: #{mong_id} [{self._mong_metadata.get_rarity(mong_id): >4}]\n")
+            result.append(
+                f"mong: #{self._mong_metadata.get_trimmed_id(mong_id)} [{self._mong_metadata.get_rarity(mong_id): >4}]\n")
 
         if result:
             result[-1] = result[-1][:-1]
@@ -102,7 +102,8 @@ def get_nft_holdings_stats(w3, wallet, metadata: doe_nft_data.Metadata = None, c
     if collection_stats is None:
         collection_stats = doe_nft_data.get_collection_stats()
     sale_prices = doe_nft_data.get_last_sale_prices(nfts)
-    holdings = {"nft_total": 0}
+    holdings = {}
+    holdings["nft_total"] = 0
     holdings["nft_cnt"] = len(nfts)
     holdings["mong"] = get_mong_nfts(w3, wallet)
     holdings["nfts"] = {}

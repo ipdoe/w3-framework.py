@@ -50,12 +50,13 @@ class EventBase:
         self.payload = self._dict['payload']
         self.timestamp = Timestamp.make(self.payload['payload']['event_timestamp'])
         self.sent_at = Timestamp.make(self.payload['sent_at'])
+        self.collection = self.payload['payload']['collection']['slug']
 
     def announcement(self):
         return f'{self.title}'
 
     def base_describe(self):
-        return f'{self.title}: ' \
+        return f'[{self.collection}] {self.title}: ' \
             f'TS: {self.timestamp}, ' \
             f'sent_at: {self.sent_at}'
 

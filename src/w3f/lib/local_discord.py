@@ -6,9 +6,9 @@ class DiscordChannels:
     def create_chans(ids):
         id_list = []
         try:
-            id_list.append(ids)
+            id_list.extend(ids) # Fails if single item
         except Exception:
-            id_list.extend(ids)
+            id_list.append(ids)
         return [bots.DscrdChannel(id) for id in id_list]
 
 

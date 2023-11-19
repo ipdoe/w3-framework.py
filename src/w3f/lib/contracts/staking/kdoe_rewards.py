@@ -10,13 +10,13 @@ CREATION_BLOCK = 16395899
 StakingBalance = namedtuple("StakingBalance", ["staked", "rewards"])
 
 def get_balance(w3: Web3, wallet, block_identifier='latest'):
-    contract = w3.eth.contract(address=contract_address, abi=kdoe_rewards_abi.get_abi())
+    contract = w3.eth.contract(address=contract_address, abi=kdoe_rewards_abi.get_abi()) # type: ignore
     balanceOf =  Web3.from_wei(contract.functions.balanceOf(wallet).call(block_identifier=block_identifier), "ether")
     earned = Web3.from_wei(contract.functions.earned(wallet).call(block_identifier=block_identifier), "ether")
     return StakingBalance(balanceOf, earned)
 
 def address_to_token(w3: Web3, wallet, block_identifier='latest'):
-    contract: Web3 = w3.eth.contract(address=contract_address, abi=kdoe_rewards_abi.get_abi())
+    contract: Web3 = w3.eth.contract(address=contract_address, abi=kdoe_rewards_abi.get_abi()) # type: ignore
     nftList = contract.functions.addressToToken(wallet).call(block_identifier=block_identifier)
     return nftList
 

@@ -11,11 +11,11 @@ from w3f.lib import whoami
 from w3f.lib.crypto_oracle import EthOracle
 from w3f.lib.local_discord import DiscordChannels
 from w3f.lib.os_nft_buy_bot import OsNftBuyBot
-from w3f.lib.metadata import DoeMetadata
+from w3f.lib.mong_metadata import MongMetadata
 
 def main():
     BASENAME = pathlib.PurePath(__file__).name
-    METADATA = DoeMetadata()
+    METADATA = MongMetadata()
 
     ######## Details required from the user
     DISCORD_TOKEN = hd.DISCORD['token']

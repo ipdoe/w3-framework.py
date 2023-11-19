@@ -34,30 +34,29 @@ class OsNftBuyBot(bots.DscrdClient):
         await self.discord_chans.send_debug(msg)
 
     async def send_event(self, event):
-        msg_sent = False
-        while not msg_sent:
-            try:
-                if event.timestamp.older_than():
-                    msg_sent = await self.discord_chans.send_debug(f"Older than: {event.base_describe()}")
-                    log.log(f"Older than: {event.base_describe()}")
-                else:
-                    if isinstance(event, osea.ItemBase):
-                        embed = self.to_discord_embed(event)
-                        log.log(embed.description)
-                        if type(event) is osea.ItemListed:
-                            msg_sent = await self.discord_chans.send_listings(embed)
-                        elif type(event) is osea.ItemSold:
-                            ####  ITME SOLD --> Tell the world!!!!
-                            msg_sent = await self.discord_chans.send_buys(embed)
-                            ####  ITME SOLD --> Tell the world!!!!
-                        elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
-                            msg_sent = await self.discord_chans.send_other(embed)
+        try:
+            if event.timestamp.older_than():
+                await self.discord_chans.send_debug(f"Older than: {event.base_describe()}")
+                log.log(f"Older than: {event.base_describe()}")
+            else:
+                if isinstance(event, osea.ItemBase):
+                    msg_sent = False
+                    embed = self.to_discord_embed(event)
+                    if type(event) is osea.ItemListed:
+                        msg_sent = await self.discord_chans.send_listings(embed)
+                    elif type(event) is osea.ItemSold:
+                        ####  ITME SOLD --> Tell the world!!!!
+                        msg_sent = await self.discord_chans.send_buys(embed)
+                        ####  ITME SOLD --> Tell the world!!!!
+                    elif type(event) is osea.ItemReceivedOffer or type(event) is osea.ItemReceivedBid:
+                        msg_sent = await self.discord_chans.send_other(embed)
 
-                    msg_sent |= await self.discord_chans.send_debug(event.base_describe())
-                    log.log(event.base_describe())
-            except Exception as e:
-                log.log(f'Exception: {e}')
-                await asyncio.sleep(1)
+                    if (msg_sent):
+                        log.log(embed.description)
+                        await self.discord_chans.send_debug(event.base_describe())
+        except Exception as e:
+            log.log(f'Exception: {e}')
+            await asyncio.sleep(1)
 
     async def dequeu_loop(self, nft_event_q: asyncio.Queue):
         log.log("Dequeuing")
