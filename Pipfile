@@ -5,6 +5,16 @@ w3f = {editable = true, path = "."}
 python_version = "3"
 
 [dev-packages]
-pytest = "*"
-pytest-asyncio = "*"
+tox = "*"
+pylint = "*"
+pytest  = "*"
 pytest-cov = "*"
+pytest-xdist = "*"
+twine = "*"
+atomicwrites = {version = "*", markers = "sys_platform == 'win32'"}
+build = {version = "*", extras = ["virtualenv"]}
+myst-parser = {version = "*", extras = ["linkify"]}
+pyproject-flake8 = "*"
+black = "*"
+isort = "*"
+pre-commit = "*"

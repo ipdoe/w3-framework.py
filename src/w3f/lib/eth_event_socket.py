@@ -1,5 +1,6 @@
 import asyncio, json
-from unicodedata import decimal
+from decimal import Decimal
+
 from web3 import Web3
 from eth_abi.abi import decode
 from w3f.lib import logger
@@ -27,7 +28,7 @@ class SwapData:
     IN0_IN1_OUT0_OUT1 = ('uint256', 'uint256', 'uint256', 'uint256')
 
     class token:
-        def __init__(self, ammount: decimal, idx):
+        def __init__(self, ammount: Decimal, idx):
             self.ammount = ammount
             self.idx = idx # TODO: remove this index and use only an in_idx because
             # the out is always the inverse
@@ -39,18 +40,20 @@ class SwapData:
             return str(self)
 
     class Ammounts:
-        def __init__(self, out_idx: int, in_ammount: decimal, out_ammount: decimal):
+        def __init__(self, out_idx: int, in_ammount: Decimal, out_ammount: Decimal):
             self.out_idx = out_idx
             self.in_a = in_ammount
             self.out_a = out_ammount
 
     def __init__(self, event_response: dict, chain = Chain.ETH):
         self.chain = chain
-        self.ammounts = self._decode_to_in_out_tokens(event_response['data'])
+        self.data = event_response['data']
+        self.ammounts = self._decode_to_in_out_tokens(self.data)
         self.addr = Web3.to_checksum_address(hex(int(event_response['topics'][2], 16)))
         self.addr_link = f"[{self.addr[:8]}]({EXPLORER[self.chain].format(f'address/{self.addr}')})"
         self.tx = event_response['transactionHash']
         self.tx_link = f"[{self.tx[:8]}]({EXPLORER[self.chain].format(f'tx/{self.tx}')})"
+        # self.block = int(event_response['blockNumber'], 0)
 
     @staticmethod
     async def subscribe(webscoket, contract:str, id=1):

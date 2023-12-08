@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from web3 import Web3
+from web3._utils.encoding import Web3JsonEncoder
 
 def dump_json(target: Path, data: dict, indent=None):
     with open(target, 'w') as o:
@@ -20,7 +20,10 @@ def to_json_str(d: dict):
         return ""
 
 def web3_pretty_json(web3_obj, indent=2):
-    return json.dumps(json.loads(Web3.to_json(web3_obj)), indent=indent)
+    return json.dumps(web3_obj, indent=indent, cls=Web3JsonEncoder)
 
 def short_hex(hex: str, chars=8):
     return hex[0:chars]
+
+def print_json(web3_obj, indent=2):
+    print(web3_pretty_json(web3_obj, indent))

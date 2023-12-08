@@ -87,7 +87,7 @@ def get_last_sale_prices(ids: List):
                 last_sale['price'] = float(Web3.from_wei(int(asset['last_sale']['total_price']), 'ether'))
                 last_sale['eth_now'] = last_sale['price'] * float(asset['last_sale']['payment_token']['eth_price'])
                 last_sale['usd_now'] = last_sale['price'] * float(asset['last_sale']['payment_token']['usd_price'])
-            except:
+            except Exception:
                 last_sale['token'] = ""
                 last_sale['price'] = 0.0
                 last_sale['eth_now'] = 0.0
