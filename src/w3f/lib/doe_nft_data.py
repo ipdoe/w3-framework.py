@@ -8,7 +8,7 @@ import w3f.hidden_details as hd
 
 _HEADERS = {'User-Agent': 'Mozilla/5.0', "X-API-KEY": hd.op_sea_key}
 _DAT_PATH = pathlib.Path("src/w3f/dat")
-OP_SEA_URL = "https://api.opensea.io/api/v1"
+OP_SEA_URL = "https://api.opensea.io/api/v2"
 
 
 CollectionStats = namedtuple("CollectionStats", ["thirty_day_average_price", "floor_price"])
@@ -72,6 +72,16 @@ def get_last_sale_prices(ids: List):
     max_chunk = 20
 
     last_sales = {}
+    for id in ids:
+        last_sales[id] = {}
+        last_sales[id]['token'] = ""
+        last_sales[id]['price'] = 0.0
+        last_sales[id]['eth_now'] = 0.0
+        last_sales[id]['usd_now'] = 0.0
+
+    # TODO: API was deprecated
+    return last_sales
+
     for i in range(0, len(ids), max_chunk):
         query_param = {
             "token_ids": ids[i:i + max_chunk],
@@ -97,9 +107,11 @@ def get_last_sale_prices(ids: List):
     return last_sales
 
 def get_collection_stats():
-    url = f"{OP_SEA_URL}/collection/dogs-of-elon/stats"
+    url = f"{OP_SEA_URL}/collections/dogs-of-elon/stats"
     data = requests.get(url, headers=_HEADERS).json()
-    return CollectionStats(data['stats']['thirty_day_average_price'], data['stats']['floor_price'])
+    print(data)
+    thirty_day_average = next(x for x in data['intervals'] if x['interval'] == "thirty_day")
+    return CollectionStats(thirty_day_average['average_price'], data['total']['floor_price'])
 
 def get_rarity_bonus(rank):
     if rank < 100:
