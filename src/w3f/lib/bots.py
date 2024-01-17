@@ -11,6 +11,7 @@ from telegram.ext import Application, CommandHandler, CallbackContext
 TG_MSG_LIMIT = 4096
 DSCRD_MSG_LIMIT = 2000
 
+
 class DscrdChannels:
     def __init__(self) -> None:
         self.doe_nft_listing = DscrdChannel(0)
@@ -38,15 +39,15 @@ class DscrdChannels:
 
     def init_with_hidden_details(self, client):
         try:
-            self.ipdoe_dbg.id =          hd.dscrd["ipdoe_dbg"]
-            self.ipdoe_nft.id =          hd.dscrd["ipdoe_nft"]
-            self.ipdoe_nft_sales.id =    hd.dscrd["ipdoe_nft_sales"]
+            self.ipdoe_dbg.id = hd.dscrd["ipdoe_dbg"]
+            self.ipdoe_nft.id = hd.dscrd["ipdoe_nft"]
+            self.ipdoe_nft_sales.id = hd.dscrd["ipdoe_nft_sales"]
             self.ipdoe_nft_listings.id = hd.dscrd["ipdoe_nft_listings"]
-            self.ipdoe_nft_offers.id =   hd.dscrd["ipdoe_nft_offers"]
-            self.ipdoe_swaps.id =        hd.dscrd["ipdoe_swaps"]
-            self.doe_nft_listing.id =    hd.dscrd.get("doe_nft_listing", 0)
-            self.doe_nft_sales.id =      hd.dscrd.get("doe_nft_sales", 0)
-            self.doe_nft_floor.id =      hd.dscrd.get("doe_nft_floor", 0)
+            self.ipdoe_nft_offers.id = hd.dscrd["ipdoe_nft_offers"]
+            self.ipdoe_swaps.id = hd.dscrd["ipdoe_swaps"]
+            self.doe_nft_listing.id = hd.dscrd.get("doe_nft_listing", 0)
+            self.doe_nft_sales.id = hd.dscrd.get("doe_nft_sales", 0)
+            self.doe_nft_floor.id = hd.dscrd.get("doe_nft_floor", 0)
 
             self.init_channels(client)
         except Exception as e:
@@ -69,7 +70,9 @@ class Services:
             return self.ens.address(wallet)
 
     def get_wealth(self, wallet):
-        return kdoe_wealth.Wealth(self.w3, self.w3_bsc, wallet, self.nft_metadata, self.mong_metadata)
+        return kdoe_wealth.Wealth(
+            self.w3, self.w3_bsc, wallet, self.nft_metadata, self.mong_metadata
+        )
 
 
 class DscrdClient(discord.Client):
@@ -114,7 +117,9 @@ class WealthDscrdBot(DscrdBot):
             self.services.oracle.create_task()
             self.chans.init_with_hidden_details(self)
 
-    async def cmd_wealth(self, ctx: discord.commands.context.ApplicationContext, wallet):
+    async def cmd_wealth(
+        self, ctx: discord.commands.context.ApplicationContext, wallet
+    ):
         try:
             wallet = self.services.to_address(wallet)
             log.log(f"wallet: {wallet}")
@@ -132,7 +137,7 @@ class WealthDscrdBot(DscrdBot):
         await ctx.respond("It's KUDOE TIME 🧩!")
 
 
-class TgBot():
+class TgBot:
     def __init__(self, token: str, services: Services) -> None:
         self.services = services
         self.app = Application.builder().token(token).build()
@@ -156,7 +161,7 @@ class TgBot():
             await update.message.reply_text("Command failed")
 
     async def start(self):
-        await self.app.initialize() # inits bot, update, persistence
+        await self.app.initialize()  # inits bot, update, persistence
         await self.app.start()
         await self.app.updater.start_polling()
 
@@ -183,28 +188,36 @@ class TgChannel:
             await bot.send_message(chat_id=chat_id, text=" ")
         except tg.error.TelegramError as e:
             # This is the expected error --> OK
-            if e.message == 'Message must be non-empty':
+            if e.message == "Message must be non-empty":
                 self.chat_id = chat_id
                 self.bot = bot
                 return
-            log.log(f'Failed to initialize tg {description}({chat_id}): {e}. INACTIVE')
+            log.log(f"Failed to initialize tg {description}({chat_id}): {e}. INACTIVE")
         except Exception as e:
-            log.log(f'Failed to initialize tg {description}({chat_id}): {e}. INACTIVE')
+            log.log(f"Failed to initialize tg {description}({chat_id}): {e}. INACTIVE")
 
     async def send_text(self, md_msg: str):
         if self.bot is not None:
             try:
-                await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.constants.ParseMode.MARKDOWN,
-                disable_web_page_preview=True, text=md_msg)
+                await self.bot.send_message(
+                    chat_id=self.chat_id,
+                    parse_mode=tg.constants.ParseMode.MARKDOWN,
+                    disable_web_page_preview=True,
+                    text=md_msg,
+                )
             except Exception as e:
-                log.log(f'Failed to send msg to tg({self.chat_id}): {e}')
+                log.log(f"Failed to send msg to tg({self.chat_id}): {e}")
 
     async def send_with_img(self, md_msg: str):
         if self.bot is not None:
             try:
-                await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.constants.ParseMode.MARKDOWN, text=md_msg)
+                await self.bot.send_message(
+                    chat_id=self.chat_id,
+                    parse_mode=tg.constants.ParseMode.MARKDOWN,
+                    text=md_msg,
+                )
             except Exception as e:
-                log.log(f'Failed to send msg to tg({self.chat_id}): {e}')
+                log.log(f"Failed to send msg to tg({self.chat_id}): {e}")
 
 
 class DscrdChannel:
@@ -215,7 +228,7 @@ class DscrdChannel:
     def set_channel(self, client):
         try:
             self.chan = client.get_channel(self.id)
-            log.log(f'Channel OK: {self.chan}')
+            log.log(f"Channel OK: {self.chan}")
         except:
             pass
 
@@ -227,7 +240,7 @@ class DscrdChannel:
                 else:
                     await self.chan.send(message)
             except Exception as e:
-                log.log(f'Failed to send embed to discord {self.chan}: {e}')
+                log.log(f"Failed to send embed to discord {self.chan}: {e}")
                 return False
             return True
         return False
