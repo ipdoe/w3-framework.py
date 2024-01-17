@@ -52,11 +52,12 @@ class DscrdChannels:
         except Exception as e:
             log.log("Failed to setup all ipdoe channels: " + str(e))
 
+
 class Services:
     def __init__(self) -> None:
-        self.w3 = Web3(Web3.HTTPProvider(hd.eth_mainnet))
+        self.w3 = web3.InfuraEth(hd.infura_key)
         self.w3_bsc = web3.GetBlockBsc(hd.GETBLOCK_KEY)
-        self.ens = ENS.from_web3(self.w3)
+        self.ens = ENS.from_web3(self.w3.w3)
         self.nft_metadata = doe_nft_data.Metadata()
         self.mong_metadata = mong_metadata.MongMetadata()
         self.oracle = crypto_oracle.DoeNftOracle()
@@ -68,7 +69,8 @@ class Services:
             return self.ens.address(wallet)
 
     def get_wealth(self, wallet):
-        return kdoe_wealth.Wealth(self.w3, self.w3_bsc.w3, wallet, self.nft_metadata, self.mong_metadata)
+        return kdoe_wealth.Wealth(self.w3, self.w3_bsc, wallet, self.nft_metadata, self.mong_metadata)
+
 
 class DscrdClient(discord.Client):
     def __init__(self, token: str) -> None:
@@ -80,6 +82,7 @@ class DscrdClient(discord.Client):
     def run(self):
         super().run(self.token)
 
+
 class Bots:
     def __init__(self, tg: tg.Bot) -> None:
         self.tg = tg
@@ -87,6 +90,7 @@ class Bots:
     @staticmethod
     def init_none():
         return Bots(None)
+
 
 class DscrdBot(discord.Bot):
     def __init__(self, token: str) -> None:
@@ -97,6 +101,7 @@ class DscrdBot(discord.Bot):
 
     def run(self):
         super().run(self.token)
+
 
 class WealthDscrdBot(DscrdBot):
     def __init__(self, token: str, services: Services) -> None:
@@ -125,6 +130,7 @@ class WealthDscrdBot(DscrdBot):
 
     async def cmd_what_time(self, ctx: discord.commands.context.ApplicationContext):
         await ctx.respond("It's KUDOE TIME 🧩!")
+
 
 class TgBot():
     def __init__(self, token: str, services: Services) -> None:
@@ -199,6 +205,7 @@ class TgChannel:
                 await self.bot.send_message(chat_id=self.chat_id, parse_mode=tg.constants.ParseMode.MARKDOWN, text=md_msg)
             except Exception as e:
                 log.log(f'Failed to send msg to tg({self.chat_id}): {e}')
+
 
 class DscrdChannel:
     def __init__(self, id: int) -> None:
