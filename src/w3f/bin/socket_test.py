@@ -27,7 +27,7 @@ logging.basicConfig(
 
 # For testing with other contracts
 # Change the swap[] list with these
-import w3f.lib.contracts.usdc_eth as usdc_eth
+import w3f.lib.contracts.usdc_eth_uni_v2 as usdc_eth_uni_v2
 import w3f.lib.contracts.eth_usdt as eth_usdt
 
 ######## Details required from the user

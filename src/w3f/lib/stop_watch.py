@@ -1,5 +1,6 @@
 import time
 
+
 class StopWatch:
     def __init__(self) -> None:
         self.__start = time.monotonic()

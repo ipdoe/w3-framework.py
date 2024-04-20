@@ -1,6 +1,7 @@
-
-import pathlib
+import asyncio
+import copy
 import json
+import websockets
 from hexbytes import HexBytes
 from typing import Union
 from enum import Enum
@@ -12,78 +13,77 @@ from web3._utils.encoding import Web3JsonEncoder
 from web3.datastructures import AttributeDict
 import web3.contract
 import web3.types
+from web3.types import TxData
 from eth_typing import HexStr
 from typing import NamedTuple, List
 from ens import ENS
 
+from w3f.lib import network
 from w3f.lib.logger import log
+from w3f.lib import json
 from w3f.lib.swap import SwapToken
 from w3f.lib.util import print_json, web3_pretty_json
+from w3f.lib.web3_events import UniV2Swap
+from w3f.lib.fungible_token import FungibleToken
 
-class Chain(Enum):
-    ETH = 0
-    BSC = 1
-    ARB = 2
-
-EXPLORER = {
-    Chain.ETH: "https://etherscan.io/{}",
-    Chain.BSC: "https://bscscan.com/{}",
-    Chain.ARB: "https://arbiscan.io/{}",
-}
-
-def j_dumps(dictionary, indent=2):
-    # class my_jenc(Web3JsonEncoder):
-    #     def default(self, obj):
-    #         if isinstance(obj, bytes):
-    #             return HexStr(HexBytes(obj).hex())
-    #         return Web3JsonEncoder.default(self, obj)
-
-    return json.dumps(dictionary, indent=indent, cls=Web3JsonEncoder)
-
-def j_dump_file(path: pathlib.Path, dictionary, indent=2):
-    with open(path, 'w') as f:
-        f.write(j_dumps(dictionary, indent))
 
 class W3:
-    def __init__(self, http_provider: str, chain = Chain.ETH, ws = "") -> None:
-        self.w3 = Web3(Web3.HTTPProvider(http_provider))
-        self.ws = ws
+    def __init__(self, provider: network.NodeProvider, key) -> None:
+        self.w3 = Web3(Web3.HTTPProvider(provider.http(key)))
+        self.ws = provider.ws(key)
         self._avg_block_time: float = 0
-        self.chain = chain
+        self.chainId = provider.chain()
 
     def get_avg_block_time(self):
         if self._avg_block_time is None:
-            current = self.w3.eth.get_block('latest')
+            current = self.w3.eth.get_block("latest")
             past = self.w3.eth.get_block(self.w3.eth.block_number - 500)
-            self._avg_block_time = float((current.timestamp - past.timestamp) / 500.0) # type: ignore
+            self._avg_block_time = float((current.timestamp - past.timestamp) / 500.0)  # type: ignore
 
     def get_latest_block_timestamp(self):
-        return self.w3.eth.get_block('latest').timestamp
+        return self.w3.eth.get_block("latest").timestamp
 
     def get_block_by_timestamp(self, timestamp) -> int:
         latest_block_timestamp = self.get_latest_block_timestamp()
         average_time = latest_block_timestamp - timestamp
-        if average_time < 0: raise ValueError('timestamp given by you exceed current block timestamp!')
+        if average_time < 0:
+            raise ValueError("timestamp given by you exceed current block timestamp!")
         average_block = average_time / self.get_avg_block_time()
 
         return int(self.w3.eth.block_number - average_block)
 
+    def ws_connect(self, ping_timeout: float):
+        return websockets.connect(self.ws, ping_timeout=ping_timeout)
 
-class Contract():
-    AllNftTransfers = NamedTuple("AllNftTransfers", [("received", List[AttributeDict]), ("sent", List[AttributeDict])])
+    async def wait_event(self, ws):
+        try:
+            json_response = json.loads(await ws.recv())
+        except asyncio.TimeoutError:
+            return None
+        return json_response["params"]["result"]
+
+
+class Contract:
+    AllNftTransfers = NamedTuple(
+        "AllNftTransfers",
+        [("received", List[AttributeDict]), ("sent", List[AttributeDict])],
+    )
 
     def __init__(self, name: str, w3: W3, address, abi) -> None:
         self.name = name
         self.address = address
         self.w3 = w3
         self.contract = w3.w3.eth.contract(address=address, abi=abi)
-        self.explorer = EXPLORER[self.w3.chain]
+        self.explorer = network.EXPLORER[w3.chainId]
 
     def addr_link(self, addr):
-        return self.explorer.format(f'address/{addr}')
+        return self.explorer.address(addr)
 
-    def tx_link(self, addr):
-        return self.explorer.format(f'tx/{addr}')
+    def tx_link(self, tx):
+        return self.explorer.tx(tx)
+
+    def get_events_list(self):
+        return self.contract.events._events
 
     def get_event_signature(self, name: str):
         for event in self.contract.events._events:
@@ -101,26 +101,35 @@ class Contract():
         return None
 
     def format_log(self, log_data):
-        log_data['topics'] = [HexBytes(v) for v in log_data['topics'] if isinstance(v, str)]
-        if isinstance(log_data['data'], str):
-            log_data['data'] = HexBytes(log_data['data'])
+        log_data["topics"] = [
+            HexBytes(v) for v in log_data["topics"] if isinstance(v, str)
+        ]
+        if isinstance(log_data["data"], str):
+            log_data["data"] = HexBytes(log_data["data"])
         return log_data
 
-    def decode_event(self, name, log_data):
-        return self.contract.events[name]().process_log(self.format_log(log_data))
+    def decode_event(self, log_data) -> dict:
+        log_data = copy.deepcopy(log_data)
+        event_name = self.get_abi_event_by_signature(log_data["topics"][0]).event_name
+        return self.contract.events[event_name]().process_log(self.format_log(log_data))
 
     def create_filter(self, event_name, params: web3.types.FilterParams) -> Filter:
         return self.contract.events[event_name].create_filter(**params)
 
-    def get_all_swaps(self, fromBlock=0, toBlock: Union[str, int]='latest') -> List[AttributeDict]:
-        if toBlock == 'latest':
+    def get_all_swaps(
+        self, fromBlock=0, toBlock: Union[str, int] = "latest"
+    ) -> List[AttributeDict]:
+        if toBlock == "latest":
             toBlock = self.w3.w3.eth.block_number
 
         return self.contract.events.Swap.create_filter(
-            fromBlock=fromBlock, toBlock=toBlock).get_all_entries()
+            fromBlock=fromBlock, toBlock=toBlock
+        ).get_all_entries()
 
-    def get_all_transfers(self, address, fromBlock=0, toBlock='latest') -> AllNftTransfers:
-        if toBlock == 'latest':
+    def get_all_transfers(
+        self, address, fromBlock=0, toBlock="latest"
+    ) -> AllNftTransfers:
+        if toBlock == "latest":
             toBlock = self.w3.w3.eth.block_number
 
         # example raw log filter.
@@ -134,11 +143,13 @@ class Contract():
         # ]}).get_all_entries()
 
         received = self.contract.events.Transfer.create_filter(
-            fromBlock=fromBlock, toBlock=toBlock, argument_filters={'to':f'{address}'}
+            fromBlock=fromBlock, toBlock=toBlock, argument_filters={"to": f"{address}"}
         ).get_all_entries()
 
         sent = self.contract.events.Transfer.create_filter(
-            fromBlock=fromBlock, toBlock=toBlock, argument_filters={'from':f'{address}'}
+            fromBlock=fromBlock,
+            toBlock=toBlock,
+            argument_filters={"from": f"{address}"},
         ).get_all_entries()
 
         return Contract.AllNftTransfers(received, sent)
@@ -146,151 +157,182 @@ class Contract():
     def wallet_inventory(self, wallet):
         raise NotImplementedError
 
-    def get_nfts_from_transfer_logs(self, address, fromBlock=0, toBlock='latest'):
-        if toBlock == 'latest':
+    def get_nfts_from_transfer_logs(self, address, fromBlock=0, toBlock="latest"):
+        if toBlock == "latest":
             toBlock = self.w3.w3.eth.block_number
 
-        all_transfers = self.get_all_transfers(address=address, fromBlock=fromBlock, toBlock=toBlock) # type: ignore
+        all_transfers = self.get_all_transfers(address=address, fromBlock=fromBlock, toBlock=toBlock)  # type: ignore
 
         nft_count = {}
         for transfer in all_transfers.received:
             nft_count.setdefault(transfer["args"]["tokenId"], 0)
-            nft_count[transfer["args"]["tokenId"]] = nft_count[transfer["args"]["tokenId"]] + 1
+            nft_count[transfer["args"]["tokenId"]] = (
+                nft_count[transfer["args"]["tokenId"]] + 1
+            )
 
         for transfer in all_transfers.sent:
             nft_count.setdefault(transfer["args"]["tokenId"], 0)
-            nft_count[transfer["args"]["tokenId"]] = nft_count[transfer["args"]["tokenId"]] - 1
+            nft_count[transfer["args"]["tokenId"]] = (
+                nft_count[transfer["args"]["tokenId"]] - 1
+            )
 
         return [id for id in nft_count if nft_count[id] > 0]
 
-    def get_nfts(self, address, fromBlock=0, toBlock='latest') -> List[int]:
+    def get_nfts(self, address, fromBlock=0, toBlock="latest") -> List[int]:
         try:
             return self.wallet_inventory(address)
-        except:
-            return self.get_nfts_from_transfer_logs(address=address, fromBlock=fromBlock, toBlock=toBlock) # type: ignore
+        except Exception:
+            return self.get_nfts_from_transfer_logs(address=address, fromBlock=fromBlock, toBlock=toBlock)  # type: ignore
+
+    # TODO: Revise ping_timeout
+    def ws_connect(self, ping_timeout=41.0):
+        return self.w3.ws_connect(ping_timeout=ping_timeout)
+
+    async def subscribe_event(self, ws, event: str, id=1):
+        await ws.send(json.dumps({
+                "id": id,
+                "method": "eth_subscribe",
+                "params": [
+                    "logs",
+                    {
+                        "address": [self.address],
+                        "topics": [self.get_event_signature(event)],
+                    },
+                ],
+            })
+        )
+
+        return await ws.recv()
 
     # decode event data
     # contract.events.OrderFulfilled().process_log(logs[0])
 
+    async def wait_event(self, ws):
+        event = await self.w3.wait_event(ws)
+        return self.decode_event(event)
+
+
+class SwapObj:
+    def __init__(
+        self,
+        explorer: network.Explorer,
+        swap: UniV2Swap,
+        in_token: FungibleToken,
+        out_token: FungibleToken,
+        tx: TxData,
+        is_buy: bool,
+    ) -> None:
+        self._explorer = explorer
+        self._swap = swap
+        self._buy_token, self._sell_token = in_token, out_token
+        if is_buy:
+            self._buy_token, self._sell_token = out_token, in_token
+        self._in_token = in_token
+        self._out_token = out_token
+        self._tx = tx
+        self._tx_addr = tx["from"]  # type: ignore
+        self._is_buy = is_buy
+
+    @staticmethod
+    def _green_red(char, usd_val, divisor):
+        return char * max(1, min(int(usd_val) // divisor, 1000))
+
+    def _addr_msg(self):
+        return f"Addr: [{self._tx_addr[:8]}]({self._explorer.address(self._tx_addr)})"
+
+    def _tx_msg(self):
+        return f"Tx: [{self._swap.tx_hash[:8]}]({self._explorer.tx(self._swap.tx_hash)})"
+
+    def _addr_tx_msg(self):
+        return f"{self._addr_msg()}, {self._tx_msg()}"
+
+    def trade_msg(
+        self, oracle_usd_price, buy_char: str, divisor: int, sell_char: str
+    ):
+        swap_char = buy_char if self._is_buy else sell_char
+        swap_usd_val = self._sell_token.ammount * oracle_usd_price
+        token_price_usd = swap_usd_val / self._buy_token.ammount
+
+        usd_msg = f" (${swap_usd_val:,.2f})" if swap_usd_val > 0.0 else ""
+        price_msg = f"Price: ${token_price_usd:f}" if token_price_usd > 0.0 else ""
+
+        return (
+            f"{self._green_red(swap_char, swap_usd_val, divisor)}\n"
+            f"In: {self._in_token}{usd_msg}\n"
+            f"Out: {self._out_token}\n"
+            f"{price_msg}\n"
+            f"{self._addr_tx_msg()}"
+        )
+
 
 class SwapContract(Contract):
-    class BuySellToken:
-        @staticmethod
-        def _green_red(char, usd_val, divisor):
-            return char * max(1, min(int(usd_val) // divisor, 1000))
-
-        def __init__(self, tokens: List[SwapToken], buy_idx: int, amountIn: list, amountOut: list) -> None:
-            sell_idx = 1 - buy_idx
-
-            if amountOut[buy_idx]:
-                # Buy
-                self.buy = True
-                self.in_token = tokens[sell_idx]
-                self.out_token = tokens[buy_idx]
-                self.in_token.set_ammount(amountIn[sell_idx])
-                self.out_token.set_ammount(amountOut[buy_idx])
-                self.buy_token = self.out_token
-                self.sell_token = self.in_token
-            else:
-                # Sell
-                self.buy = False
-                self.in_token = tokens[buy_idx]
-                self.out_token = tokens[sell_idx]
-                self.in_token.set_ammount(amountIn[buy_idx])
-                self.out_token.set_ammount(amountOut[sell_idx])
-                self.buy_token = self.in_token
-                self.sell_token = self.out_token
-
-        def buy_sell_msg(self, oracle_usd_price, buy_char: str, divisor: int, sell_char: str):
-            swap_char = buy_char if self.buy else sell_char
-            swap_usd_val = self.sell_token.ammount * oracle_usd_price
-            token_price_usd = swap_usd_val / self.buy_token.ammount
-
-            usd_msg = f" (${swap_usd_val:,.2f})" if swap_usd_val > 0.0 else ""
-            price_msg = f"Price: ${token_price_usd:f}\n" if token_price_usd > 0.0 else ""
-
-            return f"{self._green_red(swap_char, swap_usd_val, divisor)}\n" \
-                   f"In: {self.in_token.to_string()}{usd_msg}\n" \
-                   f"Out: {self.out_token.to_string()}\n" \
-                   f"{price_msg}"
-
-    class SwapLogObj:
-        def __init__(self, tokens: List[SwapToken], buy_idx: int, swap_log: dict, contract: Contract) -> None:
-            self.sender = swap_log['args']['sender']
-            self.to = swap_log['args']['to']
-
-            amountIn = [swap_log['args']['amount0In'], swap_log['args']['amount1In']]
-            amountOut = [swap_log['args']['amount0Out'], swap_log['args']['amount1Out']]
-
-            self.swap_tokens = SwapContract.BuySellToken(tokens, buy_idx, amountIn, amountOut)
-            self.tx_hash: str = swap_log['transactionHash']
-            if isinstance(self.tx_hash, HexBytes):
-                self.tx_hash = self.tx_hash.hex()
-
-            try:
-                tx = contract.w3.w3.eth.get_transaction(self.tx_hash)
-                self.tx_addr = tx['from']
-                self.tx_msg = f"addr: [{self.tx_addr[:8]}]({contract.addr_link(self.tx_addr)}),  " \
-                    f"Tx: [{self.tx_hash[:8]}]({contract.tx_link(self.tx_hash)})"
-            except Exception:
-                self.tx_msg = ""
-            # self.tx_addr_name = ENS.from_web3(self.w3).name(self.tx_addr)
-            # log(self.tx_addr_name)
-
-        def buy_sell_msg(self, oracle_usd_price, buy_char='🟢', divisor=100, sell_char='🔴'):
-            return self.swap_tokens.buy_sell_msg(oracle_usd_price, buy_char, divisor, sell_char) + \
-                f"{self.tx_msg}"
-
-        def __str__(self) -> str:
-            return f'{self.__dict__}'
-
-    def __init__(self, name: str, w3: W3, address, abi, token0: SwapToken, token1: SwapToken, buyIdx: int) -> None:
+    def __init__(
+        self,
+        name: str,
+        w3: W3,
+        address,
+        abi,
+        tokens: List[FungibleToken],
+        buy_idx: int,
+    ) -> None:
         super().__init__(name, w3, address, abi)
-        self.tokens = [token0, token1]
-        self.buy_idx = buyIdx
+        self.tokens = tokens
+        self.buy_idx = buy_idx
 
-    def process_logs(self,  fromBlock=0, toBlock: Union[str, int] = 'latest'):
+    def process_logs(self, fromBlock=0, toBlock: Union[str, int] = "latest"):
         return self.process_swaps(self.get_all_swaps(fromBlock, toBlock))
 
-    def make_swap_obj(self, swap_log):
-        return SwapContract.SwapLogObj(self.tokens, self.buy_idx, swap_log, self)
-
     def process_swaps(self, swap_logs: list):
-        processed: List[SwapContract.SwapLogObj] = []
+        processed: List[UniV2Swap] = []
         for swap_log in swap_logs:
             print_json(swap_log)
-            processed.append(self.make_swap_obj(swap_log))
+            processed.append(UniV2Swap(swap_log))
         return processed
 
-    def decode_swap_event(self, log_data):
-        return SwapContract.SwapLogObj(self.tokens, self.buy_idx, self.decode_event("Swap", log_data), self)
+    def decode_swap_event(self, swap_event):
+        return UniV2Swap(self.decode_event(swap_event))
+
+    def _swap_obj(self, swap_event_or_log: UniV2Swap):
+        if not isinstance(swap_event_or_log, UniV2Swap):
+            swap_event_or_log = self.decode_swap_event(swap_event_or_log)
+
+        in_token = self.tokens[swap_event_or_log.in_idx()].set_ammount(swap_event_or_log.amountIn)
+        out_token = self.tokens[swap_event_or_log.out_idx()].set_ammount(swap_event_or_log.amountOut)
+        tx = self.w3.w3.eth.get_transaction(HexStr(swap_event_or_log.tx_hash))
+        is_buy = swap_event_or_log._out_idx == self.buy_idx
+        return SwapObj(
+            self.explorer, swap_event_or_log, in_token, out_token, tx, is_buy
+        )
+
+    def trade_msg(self, swap_log, oracle_usd_price, buy_char="🟢", divisor=100, sell_char="🔴"):
+        return self._swap_obj(swap_log).trade_msg(oracle_usd_price, buy_char, divisor, sell_char)
+
+    async def wait_swap(self, ws):
+        swap = UniV2Swap(await self.wait_event(ws))
+        return self._swap_obj(swap)
+
+    async def wait_trade_msg(
+        self, ws, oracle_usd_price, buy_char="🟢", divisor=100, sell_char="🔴"
+    ):
+        swapObj = await self.wait_swap(ws)
+        return swapObj.trade_msg(oracle_usd_price, buy_char, divisor, sell_char)
 
 
 class InfuraEth(W3):
     def __init__(self, api_key: str) -> None:
-        super().__init__(
-            f"https://mainnet.infura.io/v3/{api_key}",
-            Chain.ETH,
-            f"wss://mainnet.infura.io/ws/v3/{api_key}")
+        super().__init__(network.PROVIDER["infura-eth"], api_key)
 
 
 class InfuraArb(W3):
-    def __init__(self, api_key: str) -> None:
-        super().__init__(
-            f"https://arbitrum-mainnet.infura.io/v3/{api_key}",
-            Chain.ARB,
-            f"wss://arbitrum-mainnet.infura.io/ws/v3/{api_key}")
+    def __init__(self, key: str) -> None:
+        super().__init__(network.PROVIDER["infura-arb"], key)
 
 
-class AnkrBsc(W3):
-    def __init__(self) -> None:
-        super().__init__("https://rpc.ankr.com/bsc",
-                         Chain.BSC)
+# class AnkrBsc(W3):
+#     def __init__(self) -> None:
+#         super().__init__("https://rpc.ankr.com/bsc", network.ChainId.BSC)
 
 
 class GetBlockBsc(W3):
-    def __init__(self, api_key: str) -> None:
-        super().__init__(
-            f"https://bsc.getblock.io/{api_key}/mainnet/",
-            Chain.BSC,
-            f"wss://bsc.getblock.io/{api_key}/mainnet/")
+    def __init__(self, key: str) -> None:
+        super().__init__(network.PROVIDER["getblock-bsc"], key)

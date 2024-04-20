@@ -8,6 +8,7 @@ TOKENS = [swap.SwapToken('eth', 'ether', decimals=4),
           swap.SwapToken('usdt', 'mwei', decimals=2)]
 ABI = eth_usdt_abi.get_abi()
 
+
 class Contract(SwapContract):
     def __init__(self, w3: W3) -> None:
         super().__init__(NAME, w3, ADDRESS, ABI,  TOKENS[0],  TOKENS[1], 0)

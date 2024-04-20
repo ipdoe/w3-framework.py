@@ -1,10 +1,13 @@
 import requests, asyncio
 from w3f.lib import logger as log
-from w3f.lib import doe_nft_data
+# from w3f.lib import doe_nft_data
+
 
 class OracaleBase:
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
+        self.name = name
         self.latest: float = None
+        self.is_running = asyncio.Event()
 
     def get(self) -> float:
         return self.latest
@@ -16,16 +19,23 @@ class OracaleBase:
         while True:
             try:
                 self._fetch()
+                self.is_running.set()
+                log.log(f"{self.name} Oracle running")
             except Exception as e:
                 log.log(e)
             await asyncio.sleep(interval_in_s)
 
-    def create_task(self, interval_in_s):
+    def create_task(self, interval_in_s=30):
         return asyncio.create_task(self._loop(interval_in_s))
+
+    async def start(self):
+        self.create_task()
+        await self.is_running.wait()
+
 
 class EthOracle(OracaleBase):
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__("Eth")
         self.latest: float
         self.nft_stats = None
         self.ll_bin = log.LogLatch(2)
@@ -36,7 +46,7 @@ class EthOracle(OracaleBase):
         binance = 'https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT'
         # messari = 'https://data.messari.io/api/v1/assets/eth/metrics/market-data'
         # coingecko = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
-        coinbase = 'https://api.coinbase.com/v2/prices/ETH-USD/spot' # 10k req/h
+        coinbase = 'https://api.coinbase.com/v2/prices/ETH-USD/spot'  # 10k req/h
 
         binance_price = 0.0
         # messari_price = 0.0
@@ -74,12 +84,13 @@ class EthOracle(OracaleBase):
                 price_list.append(coinbase_price)
             self.latest = sum(price_list) / len(price_list)
 
-    def create_task(self, interval_in_s = 30):
+    def create_task(self, interval_in_s=30):
         return super().create_task(interval_in_s)
+
 
 class BnbOracle(OracaleBase):
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__("Bnb")
         self.latest: float
         self.nft_stats = None
         self.ll_bin = log.LogLatch(2)
@@ -133,21 +144,21 @@ class BnbOracle(OracaleBase):
     def create_task(self, interval_in_s = 30):
         return super().create_task(interval_in_s)
 
-class DoeNftOracle(OracaleBase):
-    def __init__(self) -> None:
-        super().__init__()
-        self.latest: doe_nft_data.CollectionStats
-        self.ll = log.LogLatch(2)
+# class DoeNftOracle(OracaleBase):
+#     def __init__(self) -> None:
+#         super().__init__()
+#         self.latest: doe_nft_data.CollectionStats
+#         self.ll = log.LogLatch(2)
 
-    def _fetch(self):
-        try:
-            nft_stats = doe_nft_data.get_collection_stats()
-            if self.latest is None:
-                log.log(nft_stats)
-            self.latest = nft_stats
-            self.ll.reset()
-        except Exception as e:
-            self.ll.log(f"NFT stats failed: {e}")
+#     def _fetch(self):
+#         try:
+#             nft_stats = doe_nft_data.get_collection_stats()
+#             if self.latest is None:
+#                 log.log(nft_stats)
+#             self.latest = nft_stats
+#             self.ll.reset()
+#         except Exception as e:
+#             self.ll.log(f"NFT stats failed: {e}")
 
-    def create_task(self, interval_in_s = 60):
-        return super().create_task(interval_in_s)
+#     def create_task(self, interval_in_s = 60):
+#         return super().create_task(interval_in_s)

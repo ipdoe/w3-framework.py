@@ -85,11 +85,11 @@ seaport_logs = SEAPORT.filter_order_fulfilled(doe_nft_contract.ADDRESS, FilterPa
 print(f"Seaport size: {len(seaport_logs)}")
 print(j_dumps(seaport_logs))
 
-# seaport_logs = w3.eth.filter({
-#     "fromBlock": block,
-#     "toBlock": block,
-#     "address": [seaport_1p5.ADDRESS],
-#     "topics": [SEAPORT.get_event_signature("OrderFulfilled")]}).get_all_entries()
+seaport_logs = w3.eth.filter({
+    "fromBlock": block,
+    "toBlock": block,
+    "address": [seaport_1p5.ADDRESS],
+    "topics": [SEAPORT.get_event_signature("OrderFulfilled")]}).get_all_entries()
 
 received = DOE_NFT.contract.events.Transfer.create_filter(
     fromBlock=block,
@@ -109,7 +109,7 @@ received = DOE_NFT.contract.events.Transfer.create_filter(
 #     "fromBlock": block,
 #     "toBlock": block,
 #     "address": [doe_nft_contract.ADDRESS],
-#     "topics": [DOE_NFT.get_event_signature("Transfer")]}).get_all_entries()
+    # "topics": [DOE_NFT.get_event_signature("Transfer")]}).get_all_entries()
 
 # Results
 # TX 0x4a3eb8bf3fefeecadb5b809b45188dac95027b37b1834b74418b783a13acca75

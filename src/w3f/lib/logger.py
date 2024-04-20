@@ -1,4 +1,5 @@
 import datetime, json, git, sys, os
+from w3f.lib.util import web3_pretty_json
 
 def func_name(n=0):
     return sys._getframe(n + 1).f_code.co_name
@@ -23,13 +24,13 @@ def log_parent(msg):
 
 def log_json(msg):
     try:
-        _internal_log(json.dumps(msg, indent=2))
+        _internal_log(web3_pretty_json(msg))
     except:
         _internal_log(msg)
 
 def to_json_str(msg):
     try:
-        return json.dumps(msg, indent=2)
+        return web3_pretty_json(msg, indent=2)
     except:
         return ""
 

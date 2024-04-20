@@ -1,7 +1,7 @@
 
-import decimal
 from web3 import Web3
 from w3f.lib import eth_event_socket
+
 
 class SwapToken:
     def __init__(self, tracker, unit, decimals) -> None:
@@ -17,10 +17,13 @@ class SwapToken:
     def to_string(self):
         return f'{self.ammount:,.{self.decimals}f} {self.tracker}'
 
+    def __str__(self) -> str:
+        return f'{self.ammount:,.{self.decimals}f} {self.tracker}'
+
 
 class Swap:
     def __init__(self, abi, name, address, tokens: list[SwapToken],
-                 buy_idx, chain = eth_event_socket.Chain.ETH, buy_char='🟢') -> None:
+                 buy_idx, chain=eth_event_socket.network.ChainId.ETH, buy_char='🟢') -> None:
         self.abi = abi
         self.name = name
         self.address = address
