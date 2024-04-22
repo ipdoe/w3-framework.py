@@ -23,11 +23,16 @@ def __main__():
     # json.pprint(j_abi)
     # json.dump_compact(j_abi, CONTRACT_ABI / "juice.json")
 
+    # contract = "0xcbcdf9626bc03e24f779434178a73a0b4bad62ed"
+    # j_abi = fetch_abi.fetch_abi(ChainId.ETH, contract)
+    # json.pprint(j_abi)
+    # json.dump_compact(j_abi, CONTRACT_ABI / "uni_v3.json")
 
-    contract = "0xcbcdf9626bc03e24f779434178a73a0b4bad62ed"
-    j_abi = fetch_abi.fetch_abi(ChainId.ETH, contract)
+
+    contract = "0x1B69F4a3aF36bA841551Ae20b9eDf5e52827bea5"
+    j_abi = fetch_abi.fetch_abi(ChainId.BASE, contract)
     json.pprint(j_abi)
-    json.dump_compact(j_abi, CONTRACT_ABI / "uni_v3.json")
+    json.dump_compact(j_abi, CONTRACT_ABI / "uni_v3-2.json")
 
 if __name__ == '__main__':
     __main__()

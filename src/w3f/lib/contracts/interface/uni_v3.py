@@ -7,7 +7,7 @@ NAME = pathlib.PurePath(__file__).stem
 ABI = _get_abi(NAME)
 
 
-class UniV2(Contract):
+class UniV3(Contract):
     def __init__(self, w3: W3, address: str) -> None:
         super().__init__(NAME, w3, address, ABI)
         token0 = self.contract.functions.token0().call()

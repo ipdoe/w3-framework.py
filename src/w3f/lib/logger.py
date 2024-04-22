@@ -1,5 +1,5 @@
-import datetime, json, git, sys, os
-from w3f.lib.util import web3_pretty_json
+import datetime, git, sys, os
+from w3f.lib.json import dumps_compact
 
 def func_name(n=0):
     return sys._getframe(n + 1).f_code.co_name
@@ -24,13 +24,13 @@ def log_parent(msg):
 
 def log_json(msg):
     try:
-        _internal_log(web3_pretty_json(msg))
+        _internal_log(dumps_compact(msg))
     except:
         _internal_log(msg)
 
 def to_json_str(msg):
     try:
-        return web3_pretty_json(msg, indent=2)
+        return dumps_compact(msg, indent=2)
     except:
         return ""
 
@@ -39,6 +39,7 @@ def log_version():
 
 def git_describe():
     return git.cmd.Git().describe(tags=True, dirty=True)
+
 
 class LogLatch:
     def __init__(self, limit=3) -> None:

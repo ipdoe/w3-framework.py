@@ -1,0 +1,18 @@
+{
+    "args": {
+      "sender": "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD",
+      "recipient": "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD",
+      "amount0": -56005408537346726,
+      "amount1": 24000000000000000000000,
+      "sqrtPriceX96": 51704469159537918659454909544208,
+      "liquidity": 9427036038862010237516,
+      "tick": 129625
+    },
+    "event": "Swap",
+    "logIndex": "0x87",
+    "transactionIndex": "0x24",
+    "transactionHash": "0x67b15735ce3ea21502d7d2a6fb37cdb06b92d4583032a655094d021b75db3c78",
+    "address": "0x1b69f4a3af36ba841551ae20b9edf5e52827bea5",
+    "blockHash": "0xa38974e0aae408bd3d0a1bb23e662423504f7334af39fb07040ec49aec17c90a",
+    "blockNumber": "0xcd56b7"
+  }

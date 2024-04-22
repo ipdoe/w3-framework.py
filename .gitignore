@@ -57,3 +57,5 @@ MANIFEST
 .python-version
 .coveragerc
 .readthedocs.yml
+
+*.env

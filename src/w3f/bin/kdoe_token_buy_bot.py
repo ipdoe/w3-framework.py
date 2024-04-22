@@ -116,7 +116,7 @@ async def ws_event_loop(swap: SwapContract, oracle, buy_char):
                     with open("dump_tx.json", 'w') as f:
                         json.dump(log_data, f, indent=2)
                     if log_data is not None:
-                        swap_event = swap.decode_swap_event(log_data)
+                        swap_event = swap.decode_swap_v2_event(log_data)
                         text_msg = swap_event.buy_sell_msg(oracle.get(), buy_char)
                         log.log(text_msg)
                         await DSCRD_CHANS.ipdoe_swaps.send(to_embed(text_msg))
