@@ -1,6 +1,7 @@
 import requests
 from w3f.lib.util import short_hex
 
+
 class OpenseaApi:
     def __init__(self, key: str) -> None:
         self.v2 = "https://api.opensea.io/api/v2"
@@ -13,7 +14,7 @@ class OpenseaApi:
     def get_username(self, addr):
         try:
             account = self.account(addr)
-            if account['username'] is None:
+            if not account['username']:
                 return short_hex(account['account']['address'])
             return account['username']
         except Exception as e:

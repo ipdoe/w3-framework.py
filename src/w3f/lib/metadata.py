@@ -1,6 +1,6 @@
 import pathlib
 from w3f import ROOT_PATH
-from w3f.lib.util import dump_json, load_json
+from w3f.lib.json import dump, load
 try:
     from open_rarity import Collection, Token, RarityRanker, TokenMetadata, StringAttribute
     from open_rarity.models.token_identifier import EVMContractTokenIdentifier
@@ -68,15 +68,15 @@ class Metadata:
 
     @classmethod
     def get_raw(cls) -> dict:
-        return load_json(cls._raw_metadata())
+        return load(cls._raw_metadata())
 
     @classmethod
     def get_metadata(cls) -> dict:
-        return load_json(cls._metadata())
+        return load(cls._metadata())
 
     @classmethod
     def get_attributes_histogram(cls) -> dict:
-        return load_json(cls._attributes_hist())
+        return load(cls._attributes_hist())
 
     @classmethod
     def _attr_count(cls, asset_attributes: dict):
@@ -161,20 +161,20 @@ class Metadata:
 
     @classmethod
     def _dump_nft_types(cls, types):
-        dump_json(cls._nft_types(), types)
+        dump(types, cls._nft_types())
 
     @classmethod
     def dump_attributes_histogram(cls):
         _, _, attr_hist = cls.generate_metadata_from_raw()
-        dump_json(cls._attributes_hist(), attr_hist, indent=2)
+        dump(attr_hist, cls._attributes_hist(), indent=2)
 
     @classmethod
     def redump(cls):
         metadata, types, attr_hist = cls.generate_metadata_from_raw()
-        dump_json(cls._metadata(), metadata)
-        dump_json(cls._metadata_pretty(), metadata, indent=2)
+        dump(metadata, cls._metadata())
+        dump(metadata, cls._metadata_pretty(), indent=2)
         cls._dump_nft_types(types)
-        dump_json(cls._attributes_hist(), attr_hist, indent=2)
+        dump(attr_hist, cls._attributes_hist(), indent=2)
 
 
 class DoeMetadata(Metadata):
@@ -224,7 +224,7 @@ class DoeMetadata(Metadata):
     @classmethod
     def generate_metadata_from_raw(cls):
         raw_metadata = cls.get_raw()
-        raw_types = load_json(cls._DAT / "raw_doe_types.json")
+        raw_types = load(cls._DAT / "raw_doe_types.json")
         metadata = {}
         attributes_hist = {}
 

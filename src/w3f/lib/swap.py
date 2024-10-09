@@ -1,5 +1,5 @@
 from eth_typing import HexStr
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from web3.types import TxData
 
 from w3f.lib.contracts.interface.erc20 import Erc20
@@ -94,7 +94,7 @@ class UniV3SwapContract(UniV3):
         super().__init__(w3=w3, address=address)
         self.buy_idx = buy_idx
 
-    def process_logs(self, fromBlock=0, toBlock: str | int = "latest"):
+    def process_logs(self, fromBlock=0, toBlock: Union[str, int] = "latest"):
         return self.process_swaps(self.get_all_swaps(fromBlock, toBlock))
 
     def process_swaps(self, swap_logs: list):

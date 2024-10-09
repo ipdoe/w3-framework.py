@@ -1,14 +1,14 @@
 import asyncio
 import json
 import websockets
-from typing import List
+from typing import List, Union
 
 import w3f.lib.logger as log
 from w3f.lib.web3 import Contract
 
 
 class EvmEventMonitor:
-    def __init__(self, contract: Contract, events: str | List[str] = "_all_") -> None:
+    def __init__(self, contract: Contract, events: Union[str, List[str]] = "_all_") -> None:
         self._contract = contract
         self._events = []
         self._event_names = events

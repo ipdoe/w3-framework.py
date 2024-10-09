@@ -1,7 +1,7 @@
 import requests, pathlib
 from datetime import datetime, timedelta, timezone
 from w3f.lib.opensea import OpenseaApi
-from w3f.lib.util import to_json_str, dump_json
+from w3f.lib.json import dump, dumps
 
 EVENTS=['item_metadata_updated', 'item_listed', 'item_sold', 'item_transferred',
 'item_received_offer', 'item_received_bid', 'item_cancelled']
@@ -64,10 +64,10 @@ class EventBase:
         return self.base_describe()
 
     def __str__(self) -> str:
-        return to_json_str(self._dict)
+        return dumps(self._dict)
 
     def dump_json(self, path: pathlib.Path, indent=2):
-        dump_json(path, self._dict, indent=indent)
+        dump(self._dict, path, indent=indent)
 
 class ItemBase(EventBase):
     def __init__(self, _dict: dict, eth_price_usd: float, os_api_key: str) -> None:

@@ -43,7 +43,7 @@ class DiscordChannels:
         try:
             len(channel_list)
         except Exception:
-            return await channel_list.send(embed) # single item
+            return await channel_list.send(embed)  # single item
 
         # list
         msg_sent = True

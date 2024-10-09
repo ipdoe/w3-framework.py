@@ -1,3 +1,5 @@
+from typing import Union
+
 import json as j
 from pathlib import Path
 import compact_json
@@ -23,7 +25,7 @@ def dumps(data, indent=2, sort_keys=False):
     return j.dumps(data, indent=indent, sort_keys=sort_keys, cls=Web3JsonEncoder)
 
 
-def load(path: Path | str):
+def load(path: Union[Path, str]):
     with open(path, 'r') as f:
         return j.load(f)
 
@@ -39,7 +41,7 @@ def pprint(data, indent=2, sort_keys=False, flush=False):
         print(dumps(data, indent, sort_keys), flush=flush)
 
 
-def dump_compact(data, target: Path | str, indent=2):
+def dump_compact(data, target: Union[Path, str], indent=2):
     target = Path(target).as_posix()
     return __get_compact_formatter(indent).dump(data, target, True)
 
